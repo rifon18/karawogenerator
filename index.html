@@ -1,1308 +1,804 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Karawo Generator — Pembuat Pola Sulaman Khas Gorontalo</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Plus Jakarta Sans & Lora -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,600;0,700;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-                        serif: ['"Lora"', 'serif'],
-                    },
-                    colors: {
-                        krem: {
-                            50: '#FDFBF7',
-                            100: '#F8F3EA',
-                            200: '#EFE5D5',
-                            300: '#E2D1B8',
-                        },
-                        marun: {
-                            600: '#9E2A2B',
-                            700: '#7D1E1F',
-                            800: '#5E1415',
-                            900: '#420C0D',
-                        },
-                        emas: {
-                            400: '#E09F3E',
-                            500: '#C88524',
-                            600: '#A66A15',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        /* Custom Scrollbar untuk nuansa hangat & rapi */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #F8F3EA;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #D4C2A8;
-            border-radius: 9999px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #9E2A2B;
-        }
-
-        /* Pola latar belakang kanvas agar kotak transparan/putih terlihat jelas */
-        .canvas-workspace-bg {
-            background-color: #EFECE6;
-            background-image: radial-gradient(#D5CFC4 1px, transparent 1px);
-            background-size: 16px 16px;
-        }
-
-        /* Range Slider Custom Styling */
-        input[type="range"] {
-            -webkit-appearance: none;
-            appearance: none;
-            background: transparent;
-            cursor: pointer;
-        }
-        input[type="range"]::-webkit-slider-runnable-track {
-            background: #E2D1B8;
-            height: 6px;
-            border-radius: 9999px;
-        }
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            margin-top: -5px;
-            background-color: #9E2A2B;
-            height: 16px;
-            width: 16px;
-            border-radius: 50%;
-            border: 2px solid #FDFBF7;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-            transition: transform 0.15s ease;
-        }
-        input[type="range"]::-webkit-slider-thumb:hover {
-            transform: scale(1.15);
-            background-color: #7D1E1F;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Karawo Generator - Pola Strimin & Vektor Pixel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+    }
+    /* Pola papan catur transparan */
+    .checkerboard {
+      background-color: #ffffff;
+      background-image: 
+        linear-gradient(45deg, #e2e8f0 25%, transparent 25%), 
+        linear-gradient(-45deg, #e2e8f0 25%, transparent 25%), 
+        linear-gradient(45deg, transparent 75%, #e2e8f0 75%), 
+        linear-gradient(-45deg, transparent 75%, #e2e8f0 75%);
+      background-size: 20px 20px;
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+    }
+    canvas {
+      image-rendering: pixelated;
+    }
+  </style>
 </head>
-<body class="bg-krem-50 text-stone-800 font-sans antialiased min-h-screen flex flex-col selection:bg-marun-600 selection:text-white">
+<body class="min-h-screen flex flex-col">
 
-    <!-- Header / Navbar -->
-    <header class="bg-white border-b border-krem-200 sticky top-0 z-30 shadow-sm">
-        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-            <div class="flex items-center gap-3">
-                <!-- Ikon Motif Karawo SVG -->
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-marun-700 to-marun-900 flex items-center justify-center text-emas-400 shadow-inner shrink-0">
-                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="3" width="7" height="7" rx="1" fill="currentColor" fill-opacity="0.3"/>
-                        <rect x="14" y="3" width="7" height="7" rx="1"/>
-                        <rect x="3" y="14" width="7" height="7" rx="1"/>
-                        <rect x="14" y="14" width="7" height="7" rx="1" fill="currentColor" fill-opacity="0.3"/>
-                        <path d="M10 6.5h4M10 17.5h4M6.5 10v4M17.5 10v4" stroke-linecap="round"/>
-                    </svg>
-                </div>
-                <div>
-                    <div class="flex items-center gap-2">
-                        <h1 class="font-serif font-bold text-lg sm:text-xl text-marun-900 tracking-tight">Karawo Generator</h1>
-                        <span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emas-400/20 text-emas-600 border border-emas-400/30">
-                            Khas Gorontalo
-                        </span>
-                    </div>
-                    <p class="text-xs text-stone-500 hidden md:block">Konversi foto & ilustrasi menjadi pola strimin sulaman ikat</p>
-                </div>
-            </div>
-
-            <!-- Tombol Aksi Utama -->
-            <div class="flex items-center gap-2 sm:gap-3">
-                <button id="btn-export-png" class="inline-flex items-center gap-2 bg-marun-700 hover:bg-marun-800 active:bg-marun-900 text-white font-medium text-xs sm:text-sm px-3.5 sm:px-4 py-2.5 rounded-xl shadow-sm transition-all cursor-pointer">
-                    <i data-lucide="download" class="w-4 h-4 text-emas-400"></i>
-                    <span>Unduh Pola Cetak (PNG)</span>
-                </button>
-            </div>
+  <!-- Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-amber-600 text-white flex items-center justify-center font-bold text-lg shadow-sm">
+          K
         </div>
-    </header>
+        <div>
+          <h1 class="font-bold text-slate-900 text-lg leading-tight">Karawo Generator</h1>
+          <p class="text-xs text-slate-500">Pembuat Pola Strimin & Vektor Pixel Otomatis</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="btn-export-svg" class="px-3.5 py-2 text-xs sm:text-sm font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition cursor-pointer">
+          Unduh Vektor (SVG)
+        </button>
+        <button id="btn-export-png" class="px-3.5 py-2 text-xs sm:text-sm font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-lg shadow-sm transition cursor-pointer">
+          Unduh Pola Cetak (PNG)
+        </button>
+      </div>
+    </div>
+  </header>
 
-    <!-- Notifikasi Toast (Pengganti alert) -->
-    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
-
-    <!-- Konten Utama: Sidebar Kontrol + Area Kanvas -->
-    <main class="flex-1 max-w-[1600px] w-full mx-auto flex flex-col lg:flex-row overflow-hidden">
+  <!-- Main Content -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+    
+    <!-- Panel Kontrol (Kiri) -->
+    <aside class="lg:col-span-4 space-y-5">
+      
+      <!-- 1. Unggah Gambar -->
+      <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+        <h2 class="font-semibold text-slate-800 text-sm uppercase tracking-wider">1. Sumber Gambar</h2>
         
-        <!-- SIDEBAR KIRI: Kontrol & Pengaturan -->
-        <aside class="w-full lg:w-[370px] xl:w-[400px] bg-white border-b lg:border-b-0 lg:border-r border-krem-200 flex flex-col shrink-0 lg:h-[calc(100vh-4rem)] lg:overflow-y-auto">
-            <div class="p-4 sm:p-5 space-y-6">
+        <label id="drop-zone" class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer bg-slate-50 hover:bg-amber-50/50 hover:border-amber-400 transition">
+          <div class="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
+            <svg class="w-7 h-7 mb-2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+            </svg>
+            <p class="text-xs font-medium text-slate-700">Klik untuk unggah atau tarik gambar ke sini</p>
+            <p class="text-[11px] text-slate-400 mt-0.5">PNG, JPG, WEBP</p>
+          </div>
+          <input id="file-input" type="file" class="hidden" accept="image/*" />
+        </label>
 
-                <!-- BAGIAN 1: Sumber Gambar -->
-                <section class="space-y-3">
-                    <div class="flex items-center justify-between">
-                        <h2 class="text-xs font-bold uppercase tracking-wider text-marun-800 flex items-center gap-1.5">
-                            <span class="w-5 h-5 rounded-full bg-marun-100 text-marun-700 inline-flex items-center justify-center text-[11px]">1</span>
-                            Unggah Gambar / Motif
-                        </h2>
-                        <span class="text-[11px] text-stone-400">JPG, PNG, WEBP</span>
-                    </div>
+        <div>
+          <p class="text-xs text-slate-500 mb-2">Atau coba contoh motif:</p>
+          <div class="grid grid-cols-3 gap-2">
+            <button type="button" onclick="loadSample('bunga')" class="py-1.5 px-2 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition cursor-pointer">Bunga</button>
+            <button type="button" onclick="loadSample('geometris')" class="py-1.5 px-2 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition cursor-pointer">Geometris</button>
+            <button type="button" onclick="loadSample('daun')" class="py-1.5 px-2 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition cursor-pointer">Sulur Daun</button>
+          </div>
+        </div>
+      </div>
 
-                    <!-- Dropzone -->
-                    <div id="dropzone" class="border-2 border-dashed border-krem-300 hover:border-marun-600 bg-krem-50/70 hover:bg-krem-100/60 rounded-2xl p-4 text-center transition-all cursor-pointer group">
-                        <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp" class="hidden">
-                        <div class="w-10 h-10 rounded-full bg-white shadow-sm border border-krem-200 mx-auto flex items-center justify-center text-marun-700 group-hover:scale-105 transition-transform mb-2">
-                            <i data-lucide="image-plus" class="w-5 h-5"></i>
-                        </div>
-                        <p class="text-sm font-semibold text-stone-700">Klik atau seret gambar ke sini</p>
-                        <p class="text-xs text-stone-500 mt-0.5">Otomatis diubah ke pola titik besar</p>
-                    </div>
+      <!-- 2. Penghapus Background & Fokus Objek -->
+      <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="font-semibold text-slate-800 text-sm uppercase tracking-wider">2. Fokus Objek & Hapus Latar</h2>
+          <label class="inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="toggle-remove-bg" class="sr-only peer" checked>
+            <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all relative peer-checked:bg-amber-600"></div>
+          </label>
+        </div>
 
-                    <!-- Preset Motif Contoh -->
-                    <div>
-                        <p class="text-xs font-medium text-stone-500 mb-2">Atau coba contoh motif cepat:</p>
-                        <div class="grid grid-cols-3 gap-2">
-                            <button type="button" data-preset="bunga" class="preset-btn flex flex-col items-center gap-1 p-2 rounded-xl border border-krem-200 bg-krem-50 hover:border-marun-600 hover:bg-white transition-all text-xs font-medium text-stone-700">
-                                <span class="text-lg">🌺</span>
-                                <span>Bunga Karawo</span>
-                            </button>
-                            <button type="button" data-preset="geometris" class="preset-btn flex flex-col items-center gap-1 p-2 rounded-xl border border-krem-200 bg-krem-50 hover:border-marun-600 hover:bg-white transition-all text-xs font-medium text-stone-700">
-                                <span class="text-lg">💠</span>
-                                <span>Geometris</span>
-                            </button>
-                            <button type="button" data-preset="daun" class="preset-btn flex flex-col items-center gap-1 p-2 rounded-xl border border-krem-200 bg-krem-50 hover:border-marun-600 hover:bg-white transition-all text-xs font-medium text-stone-700">
-                                <span class="text-lg">🌿</span>
-                                <span>Sulur Daun</span>
-                            </button>
-                        </div>
-                    </div>
-                </section>
-
-                <hr class="border-krem-200">
-
-                <!-- BAGIAN 2: Pengaturan Pola Strimin -->
-                <section class="space-y-4">
-                    <h2 class="text-xs font-bold uppercase tracking-wider text-marun-800 flex items-center gap-1.5">
-                        <span class="w-5 h-5 rounded-full bg-marun-100 text-marun-700 inline-flex items-center justify-center text-[11px]">2</span>
-                        Ukuran & Bentuk Pola
-                    </h2>
-
-                    <!-- Slider Resolusi Grid (Kolom) -->
-                    <div class="bg-krem-50 p-3.5 rounded-xl border border-krem-200 space-y-2">
-                        <div class="flex justify-between items-center">
-                            <label for="grid-cols" class="text-xs font-semibold text-stone-700">Lebar Kolom (Ukuran Titik)</label>
-                            <span id="grid-cols-val" class="text-xs font-bold text-marun-700 bg-white px-2 py-0.5 rounded-md border border-krem-200">40 × 40 kotak</span>
-                        </div>
-                        <input type="range" id="grid-cols" min="16" max="100" value="40" class="w-full">
-                        <div class="flex justify-between text-[10px] text-stone-400">
-                            <span>16 (Titik Sangat Besar)</span>
-                            <span>100 (Detail Halus)</span>
-                        </div>
-                    </div>
-
-                    <!-- Slider Jumlah Warna -->
-                    <div class="bg-krem-50 p-3.5 rounded-xl border border-krem-200 space-y-2">
-                        <div class="flex justify-between items-center">
-                            <label for="color-count" class="text-xs font-semibold text-stone-700">Jumlah Warna Benang</label>
-                            <span id="color-count-val" class="text-xs font-bold text-marun-700 bg-white px-2 py-0.5 rounded-md border border-krem-200">6 Warna</span>
-                        </div>
-                        <input type="range" id="color-count" min="2" max="24" value="6" class="w-full">
-                        <div class="flex justify-between text-[10px] text-stone-400">
-                            <span>2 Warna (Minimalis)</span>
-                            <span>24 Warna (Kompleks)</span>
-                        </div>
-                    </div>
-
-                    <!-- Bentuk Titik / Jenis Sulaman -->
-                    <div class="space-y-1.5">
-                        <label class="text-xs font-semibold text-stone-700 block">Bentuk Titik Pola</label>
-                        <div class="grid grid-cols-3 gap-2" id="shape-selector">
-                            <button type="button" data-shape="square" class="shape-btn active flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl border text-xs font-semibold transition-all bg-marun-700 text-white border-marun-700 shadow-sm">
-                                <span class="w-3 h-3 bg-current rounded-[2px]"></span>
-                                <span>Kotak</span>
-                            </button>
-                            <button type="button" data-shape="circle" class="shape-btn flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl border border-krem-200 bg-white text-stone-700 hover:bg-krem-50 text-xs font-semibold transition-all">
-                                <span class="w-3 h-3 bg-current rounded-full"></span>
-                                <span>Bulat</span>
-                            </button>
-                            <button type="button" data-shape="cross" class="shape-btn flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl border border-krem-200 bg-white text-stone-700 hover:bg-krem-50 text-xs font-semibold transition-all">
-                                <i data-lucide="x" class="w-3.5 h-3.5"></i>
-                                <span>Silang (X)</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Opsi Tampilan Grid & Nomor -->
-                    <div class="grid grid-cols-2 gap-2 pt-1">
-                        <label class="flex items-center gap-2 p-2.5 rounded-xl border border-krem-200 bg-white cursor-pointer hover:bg-krem-50 transition-colors">
-                            <input type="checkbox" id="toggle-grid" checked class="w-4 h-4 accent-marun-700 rounded">
-                            <span class="text-xs font-medium text-stone-700">Garis Strimin</span>
-                        </label>
-                        <label class="flex items-center gap-2 p-2.5 rounded-xl border border-krem-200 bg-white cursor-pointer hover:bg-krem-50 transition-colors">
-                            <input type="checkbox" id="toggle-ruler" checked class="w-4 h-4 accent-marun-700 rounded">
-                            <span class="text-xs font-medium text-stone-700">Nomor Tepi</span>
-                        </label>
-                        <label class="col-span-2 flex items-center justify-between p-2.5 rounded-xl border border-krem-200 bg-white cursor-pointer hover:bg-krem-50 transition-colors">
-                            <div class="flex items-center gap-2">
-                                <input type="checkbox" id="toggle-numbers" class="w-4 h-4 accent-marun-700 rounded">
-                                <span class="text-xs font-medium text-stone-700">Tampilkan Kode Nomor di Dalam Titik</span>
-                            </div>
-                            <span class="text-[10px] px-1.5 py-0.5 rounded bg-krem-100 text-stone-500">Panduan</span>
-                        </label>
-                    </div>
-                </section>
-
-                <hr class="border-krem-200">
-
-                <!-- BAGIAN 3: Penyesuaian Gambar Dasar -->
-                <section class="space-y-3">
-                    <div class="flex items-center justify-between">
-                        <h2 class="text-xs font-bold uppercase tracking-wider text-marun-800 flex items-center gap-1.5">
-                            <span class="w-5 h-5 rounded-full bg-marun-100 text-marun-700 inline-flex items-center justify-center text-[11px]">3</span>
-                            Ketegasan Gambar
-                        </h2>
-                        <button type="button" id="btn-reset-adjust" class="text-[11px] text-marun-700 hover:underline font-medium">Reset</button>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-3">
-                        <div class="bg-krem-50 p-3 rounded-xl border border-krem-200 space-y-1.5">
-                            <div class="flex justify-between text-xs">
-                                <span class="font-medium text-stone-600">Kecerahan</span>
-                                <span id="brightness-val" class="font-bold text-stone-800">0%</span>
-                            </div>
-                            <input type="range" id="brightness" min="-50" max="50" value="0" class="w-full">
-                        </div>
-                        <div class="bg-krem-50 p-3 rounded-xl border border-krem-200 space-y-1.5">
-                            <div class="flex justify-between text-xs">
-                                <span class="font-medium text-stone-600">Kontras</span>
-                                <span id="contrast-val" class="font-bold text-stone-800">10%</span>
-                            </div>
-                            <input type="range" id="contrast" min="-50" max="80" value="10" class="w-full">
-                        </div>
-                    </div>
-                </section>
-
-                <hr class="border-krem-200">
-
-                <!-- BAGIAN 4: Palet Warna Benang & Legenda -->
-                <section class="space-y-3 pb-4">
-                    <div class="flex items-center justify-between">
-                        <h2 class="text-xs font-bold uppercase tracking-wider text-marun-800 flex items-center gap-1.5">
-                            <span class="w-5 h-5 rounded-full bg-marun-100 text-marun-700 inline-flex items-center justify-center text-[11px]">4</span>
-                            Palet Warna Benang
-                        </h2>
-                        <button type="button" id="btn-clear-highlight" class="hidden text-[11px] bg-emas-400/20 text-emas-600 px-2 py-0.5 rounded-full font-semibold hover:bg-emas-400/30">
-                            Tampilkan Semua
-                        </button>
-                    </div>
-                    <p class="text-[11px] text-stone-500 leading-relaxed">
-                        Klik kartu warna untuk <strong>menyorot</strong> posisinya di pola, atau klik ikon kuas untuk mengganti warna benang.
-                    </p>
-
-                    <!-- Daftar Kartu Warna -->
-                    <div id="palette-list" class="space-y-2">
-                        <!-- Diisi secara dinamis oleh JavaScript -->
-                    </div>
-                </section>
-
+        <div id="bg-controls" class="space-y-3 pt-1">
+          <div>
+            <div class="flex justify-between text-xs mb-1">
+              <span class="text-slate-600 font-medium">Toleransi Hapus Background</span>
+              <span id="val-tolerance" class="font-bold text-amber-600">35</span>
             </div>
-        </aside>
+            <input id="input-tolerance" type="range" min="5" max="150" value="35" class="w-full accent-amber-600 cursor-pointer">
+            <p class="text-[11px] text-slate-400 mt-1">Otomatis mendeteksi warna tepi luar gambar dan menghapusnya.</p>
+          </div>
 
-        <!-- AREA KANAN: Pratinjau Kanvas Interaktif -->
-        <section class="flex-1 flex flex-col min-w-0 lg:h-[calc(100vh-4rem)]">
-            
-            <!-- Toolbar Atas Kanvas -->
-            <div class="bg-krem-100/90 backdrop-blur border-b border-krem-200 px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
-                <!-- Tab Mode Tampilan -->
-                <div class="inline-flex p-1 rounded-xl bg-krem-200/80 border border-krem-300/60">
-                    <button type="button" id="tab-pattern" class="view-tab active px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white text-marun-800 shadow-sm transition-all flex items-center gap-1.5">
-                        <i data-lucide="grid" class="w-3.5 h-3.5"></i>
-                        <span>Pola Karawo</span>
-                    </button>
-                    <button type="button" id="tab-original" class="view-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold text-stone-600 hover:text-stone-900 transition-all flex items-center gap-1.5">
-                        <i data-lucide="image" class="w-3.5 h-3.5"></i>
-                        <span>Gambar Asli</span>
-                    </button>
-                </div>
-
-                <!-- Info Dimensi Pola -->
-                <div class="hidden sm:flex items-center gap-4 text-xs text-stone-600">
-                    <div class="flex items-center gap-1.5">
-                        <i data-lucide="maximize-2" class="w-3.5 h-3.5 text-marun-700"></i>
-                        <span>Ukuran: <strong id="info-dimensions" class="text-stone-800">40 × 40</strong> titik</span>
-                    </div>
-                    <div class="flex items-center gap-1.5">
-                        <i data-lucide="hash" class="w-3.5 h-3.5 text-marun-700"></i>
-                        <span>Total: <strong id="info-total-stitches" class="text-stone-800">1.600</strong> tusukan</span>
-                    </div>
-                </div>
-
-                <!-- Kontrol Zoom -->
-                <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-krem-200 shadow-sm">
-                    <button type="button" id="btn-zoom-out" title="Perkecil (Zoom Out)" class="p-1.5 rounded-lg hover:bg-krem-100 text-stone-700 transition-colors">
-                        <i data-lucide="zoom-out" class="w-4 h-4"></i>
-                    </button>
-                    <span id="zoom-level" class="text-xs font-bold text-stone-700 w-12 text-center select-none">100%</span>
-                    <button type="button" id="btn-zoom-in" title="Perbesar (Zoom In)" class="p-1.5 rounded-lg hover:bg-krem-100 text-stone-700 transition-colors">
-                        <i data-lucide="zoom-in" class="w-4 h-4"></i>
-                    </button>
-                    <div class="w-px h-4 bg-krem-200 mx-0.5"></div>
-                    <button type="button" id="btn-zoom-reset" title="Reset Tampilan" class="px-2 py-1 rounded-lg hover:bg-krem-100 text-xs font-medium text-marun-700 transition-colors">
-                        Pas
-                    </button>
-                </div>
+          <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+            <div>
+              <span class="text-xs font-medium text-slate-700 block">Potong Otomatis (Fokus Objek)</span>
+              <span class="text-[11px] text-slate-400">Buang ruang kosong di pinggir</span>
             </div>
+            <input type="checkbox" id="toggle-autocrop" class="w-4 h-4 accent-amber-600 rounded cursor-pointer" checked>
+          </div>
+        </div>
+      </div>
 
-            <!-- Viewport Kanvas Scrollable -->
-            <div id="canvas-viewport" class="flex-1 canvas-workspace-bg overflow-auto flex items-center justify-center p-4 sm:p-8 relative">
-                
-                <!-- Container Kanvas Pola Karawo -->
-                <div id="pattern-wrapper" class="bg-white p-3 sm:p-5 rounded-2xl shadow-lg border border-krem-200 transition-transform origin-center">
-                    <canvas id="pattern-canvas" class="block mx-auto"></canvas>
-                </div>
+      <!-- 3. Pengaturan Pola Strimin & Vektor -->
+      <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+        <h2 class="font-semibold text-slate-800 text-sm uppercase tracking-wider">3. Ukuran Titik & Benang</h2>
 
-                <!-- Container Gambar Asli (Tersembunyi secara default) -->
-                <div id="original-wrapper" class="hidden bg-white p-3 sm:p-5 rounded-2xl shadow-lg border border-krem-200 max-w-full max-h-full">
-                    <img id="original-preview" alt="Gambar Asli" class="max-h-[70vh] w-auto object-contain rounded-lg mx-auto">
-                </div>
+        <!-- Resolusi Grid -->
+        <div>
+          <div class="flex justify-between text-xs mb-1">
+            <span class="text-slate-600 font-medium">Lebar Grid (Jumlah Kolom Titik)</span>
+            <span id="val-cols" class="font-bold text-amber-600">42 kolom</span>
+          </div>
+          <input id="input-cols" type="range" min="16" max="90" value="42" class="w-full accent-amber-600 cursor-pointer">
+        </div>
 
-                <!-- Tooltip Koordinat Saat Hover di Kanvas -->
-                <div id="hover-tooltip" class="hidden pointer-events-none fixed z-40 bg-stone-900/90 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg backdrop-blur-sm flex items-center gap-2">
-                    <span id="tooltip-swatch" class="w-3 h-3 rounded-sm border border-white/40"></span>
-                    <span id="tooltip-text">Baris 1, Kolom 1 • Warna #1</span>
-                </div>
+        <!-- Jumlah Warna -->
+        <div>
+          <div class="flex justify-between text-xs mb-1">
+            <span class="text-slate-600 font-medium">Jumlah Warna Benang</span>
+            <span id="val-colors" class="font-bold text-amber-600">6 warna</span>
+          </div>
+          <input id="input-colors" type="range" min="2" max="16" value="6" class="w-full accent-amber-600 cursor-pointer">
+        </div>
 
-            </div>
+        <!-- Bentuk Titik Pixel -->
+        <div>
+          <label class="text-xs font-medium text-slate-600 block mb-1.5">Bentuk Titik Vektor</label>
+          <div class="grid grid-cols-3 gap-2">
+            <button type="button" data-shape="square" class="shape-btn py-2 px-2 text-xs font-semibold rounded-lg border border-amber-600 bg-amber-50 text-amber-700 cursor-pointer">Kotak</button>
+            <button type="button" data-shape="circle" class="shape-btn py-2 px-2 text-xs font-semibold rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 cursor-pointer">Bulat</button>
+            <button type="button" data-shape="cross" class="shape-btn py-2 px-2 text-xs font-semibold rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 cursor-pointer">Silang (X)</button>
+          </div>
+        </div>
 
-            <!-- Footer Info Singkat di Bawah Kanvas -->
-            <div class="bg-white border-t border-krem-200 px-4 py-2 text-[11px] text-stone-500 flex flex-wrap items-center justify-between gap-2">
-                <span>💡 <strong>Tips Pengrajin:</strong> Gunakan pola berukuran 30–50 kolom untuk motif saputangan atau bagian dada baju Karawo.</span>
-                <span class="text-stone-400">Arahkan kursor ke titik pada pola untuk melihat koordinat baris & kolom.</span>
-            </div>
-        </section>
+        <!-- Garis Bantu Strimin -->
+        <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+          <span class="text-xs font-medium text-slate-700">Tampilkan Garis Kotak Strimin</span>
+          <input type="checkbox" id="toggle-grid" class="w-4 h-4 accent-amber-600 rounded cursor-pointer" checked>
+        </div>
+      </div>
 
-    </main>
+    </aside>
 
-    <!-- Hidden Color Picker Input untuk Mengubah Warna Benang -->
-    <input type="color" id="hidden-color-picker" class="sr-only">
+    <!-- Area Kanvas & Palet (Kanan) -->
+    <section class="lg:col-span-8 flex flex-col gap-5">
+      
+      <!-- Info Bar -->
+      <div class="bg-white px-5 py-3 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div class="flex items-center gap-4">
+          <span>Dimensi Pola: <strong id="info-dim" class="text-slate-900">0 × 0</strong> titik</span>
+          <span>Total Tusukan Objek: <strong id="info-stitches" class="text-amber-600">0</strong> titik</span>
+        </div>
+        <div class="text-slate-500">
+          Klik warna di bawah untuk menyorot letaknya pada pola
+        </div>
+      </div>
 
-    <script>
-        // Inisialisasi Ikon Lucide
-        lucide.createIcons();
+      <!-- Kanvas Hasil -->
+      <div class="bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-sm flex-1 flex items-center justify-center checkerboard min-h-[420px] overflow-auto">
+        <canvas id="pattern-canvas" class="max-w-full h-auto shadow-md rounded"></canvas>
+      </div>
 
-        /**
-         * STATE APLIKASI UTAMA
-         */
-        const state = {
-            sourceImage: null,          // Objek HTMLImageElement yang aktif
-            gridCols: 40,               // Lebar grid dalam jumlah kolom
-            gridRows: 40,               // Tinggi grid (dihitung proporsional dari rasio gambar)
-            colorCount: 6,              // Jumlah warna maksimal (K-Means)
-            shape: 'square',            // 'square' | 'circle' | 'cross'
-            showGrid: true,             // Tampilkan garis bantu strimin
-            showRuler: true,            // Tampilkan nomor baris & kolom di tepi
-            showNumbers: false,         // Tampilkan nomor indeks warna di dalam titik
-            brightness: 0,              // -50 s/d 50
-            contrast: 10,               // -50 s/d 80
-            zoom: 1,                    // Skala zoom kanvas (0.5 s/d 3)
-            viewMode: 'pattern',        // 'pattern' | 'original'
-            
-            // Data hasil pemrosesan
-            gridIndices: [],            // Array 2D [row][col] berisi indeks palet warna
-            palette: [],                // Array objek { r, g, b, hex, count, id }
-            highlightedColorIdx: null,  // Indeks warna yang sedang disorot (null = semua)
-            editingColorIdx: null       // Indeks warna yang sedang diedit lewat color picker
+      <!-- Palet Benang -->
+      <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-semibold text-slate-800 text-sm">Palet Warna Benang (Hanya Objek Utama)</h3>
+          <button id="btn-reset-highlight" class="text-xs text-amber-600 hover:underline hidden cursor-pointer">Tampilkan Semua Warna</button>
+        </div>
+        <div id="palette-container" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2.5">
+          <!-- Item palet dirender di sini -->
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <script>
+    // State Aplikasi
+    const state = {
+      sourceImage: null,
+      cols: 42,
+      numColors: 6,
+      removeBg: true,
+      tolerance: 35,
+      autoCrop: true,
+      shape: 'square',
+      showGrid: true,
+      gridData: [], // Array 2D berisi hex color atau null (transparan)
+      palette: [],  // [{ hex, count }]
+      highlightedHex: null
+    };
+
+    // Elemen DOM
+    const canvas = document.getElementById('pattern-canvas');
+    const ctx = canvas.getContext('2d');
+    const fileInput = document.getElementById('file-input');
+    const dropZone = document.getElementById('drop-zone');
+
+    // Event Listeners Kontrol
+    document.getElementById('input-cols').addEventListener('input', (e) => {
+      state.cols = parseInt(e.target.value);
+      document.getElementById('val-cols').textContent = `${state.cols} kolom`;
+      processImage();
+    });
+
+    document.getElementById('input-colors').addEventListener('input', (e) => {
+      state.numColors = parseInt(e.target.value);
+      document.getElementById('val-colors').textContent = `${state.numColors} warna`;
+      processImage();
+    });
+
+    document.getElementById('toggle-remove-bg').addEventListener('change', (e) => {
+      state.removeBg = e.target.checked;
+      document.getElementById('bg-controls').style.opacity = state.removeBg ? '1' : '0.4';
+      processImage();
+    });
+
+    document.getElementById('input-tolerance').addEventListener('input', (e) => {
+      state.tolerance = parseInt(e.target.value);
+      document.getElementById('val-tolerance').textContent = state.tolerance;
+      processImage();
+    });
+
+    document.getElementById('toggle-autocrop').addEventListener('change', (e) => {
+      state.autoCrop = e.target.checked;
+      processImage();
+    });
+
+    document.getElementById('toggle-grid').addEventListener('change', (e) => {
+      state.showGrid = e.target.checked;
+      renderPattern();
+    });
+
+    document.querySelectorAll('.shape-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.shape-btn').forEach(b => {
+          b.className = 'shape-btn py-2 px-2 text-xs font-semibold rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 cursor-pointer';
+        });
+        btn.className = 'shape-btn py-2 px-2 text-xs font-semibold rounded-lg border border-amber-600 bg-amber-50 text-amber-700 cursor-pointer';
+        state.shape = btn.dataset.shape;
+        renderPattern();
+      });
+    });
+
+    document.getElementById('btn-reset-highlight').addEventListener('click', () => {
+      state.highlightedHex = null;
+      document.getElementById('btn-reset-highlight').classList.add('hidden');
+      renderPalette();
+      renderPattern();
+    });
+
+    // Upload File & Drag-Drop
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) loadFile(e.target.files[0]);
+    });
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('border-amber-500', 'bg-amber-50');
+    });
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('border-amber-500', 'bg-amber-50');
+    });
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('border-amber-500', 'bg-amber-50');
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]);
+    });
+
+    function loadFile(file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          state.sourceImage = img;
+          state.highlightedHex = null;
+          processImage();
         };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
 
-        // Referensi Elemen DOM
-        const els = {
-            dropzone: document.getElementById('dropzone'),
-            fileInput: document.getElementById('file-input'),
-            gridCols: document.getElementById('grid-cols'),
-            gridColsVal: document.getElementById('grid-cols-val'),
-            colorCount: document.getElementById('color-count'),
-            colorCountVal: document.getElementById('color-count-val'),
-            shapeBtns: document.querySelectorAll('.shape-btn'),
-            toggleGrid: document.getElementById('toggle-grid'),
-            toggleRuler: document.getElementById('toggle-ruler'),
-            toggleNumbers: document.getElementById('toggle-numbers'),
-            brightness: document.getElementById('brightness'),
-            brightnessVal: document.getElementById('brightness-val'),
-            contrast: document.getElementById('contrast'),
-            contrastVal: document.getElementById('contrast-val'),
-            btnResetAdjust: document.getElementById('btn-reset-adjust'),
-            paletteList: document.getElementById('palette-list'),
-            btnClearHighlight: document.getElementById('btn-clear-highlight'),
-            patternCanvas: document.getElementById('pattern-canvas'),
-            patternWrapper: document.getElementById('pattern-wrapper'),
-            originalWrapper: document.getElementById('original-wrapper'),
-            originalPreview: document.getElementById('original-preview'),
-            tabPattern: document.getElementById('tab-pattern'),
-            tabOriginal: document.getElementById('tab-original'),
-            infoDimensions: document.getElementById('info-dimensions'),
-            infoTotalStitches: document.getElementById('info-total-stitches'),
-            btnZoomIn: document.getElementById('btn-zoom-in'),
-            btnZoomOut: document.getElementById('btn-zoom-out'),
-            btnZoomReset: document.getElementById('btn-zoom-reset'),
-            zoomLevel: document.getElementById('zoom-level'),
-            btnExportPng: document.getElementById('btn-export-png'),
-            hiddenColorPicker: document.getElementById('hidden-color-picker'),
-            hoverTooltip: document.getElementById('hover-tooltip'),
-            tooltipSwatch: document.getElementById('tooltip-swatch'),
-            tooltipText: document.getElementById('tooltip-text'),
-            canvasViewport: document.getElementById('canvas-viewport')
-        };
+    // Buat Gambar Contoh Built-in (dengan background putih untuk menguji fitur hapus BG)
+    function loadSample(type) {
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = 200;
+      tempCanvas.height = 200;
+      const tCtx = tempCanvas.getContext('2d');
 
-        /**
-         * NOTIFIKASI TOAST (Pengganti alert)
-         */
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            const bgClass = type === 'success' ? 'bg-marun-800 text-white border-emas-400/50' : 'bg-stone-800 text-white border-stone-700';
-            toast.className = `pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-lg border text-xs font-medium transform transition-all duration-300 translate-y-2 opacity-0 ${bgClass}`;
-            toast.innerHTML = `
-                <span class="w-2 h-2 rounded-full bg-emas-400 shrink-0"></span>
-                <span>${message}</span>
-            `;
-            container.appendChild(toast);
+      // Isi background putih
+      tCtx.fillStyle = '#ffffff';
+      tCtx.fillRect(0, 0, 200, 200);
 
-            requestAnimationFrame(() => {
-                toast.classList.remove('translate-y-2', 'opacity-0');
-            });
+      if (type === 'bunga') {
+        // Kelopak Bunga
+        tCtx.fillStyle = '#e11d48';
+        for (let i = 0; i < 6; i++) {
+          const angle = (i * Math.PI) / 3;
+          tCtx.beginPath();
+          tCtx.arc(100 + Math.cos(angle) * 42, 100 + Math.sin(angle) * 42, 30, 0, Math.PI * 2);
+          tCtx.fill();
+        }
+        // Putik
+        tCtx.fillStyle = '#f59e0b';
+        tCtx.beginPath();
+        tCtx.arc(100, 100, 24, 0, Math.PI * 2);
+        tCtx.fill();
+        // Daun bawah
+        tCtx.fillStyle = '#16a34a';
+        tCtx.beginPath();
+        tCtx.ellipse(70, 165, 25, 12, -0.4, 0, Math.PI * 2);
+        tCtx.ellipse(130, 165, 25, 12, 0.4, 0, Math.PI * 2);
+        tCtx.fill();
+      } else if (type === 'geometris') {
+        tCtx.fillStyle = '#1d4ed8';
+        tCtx.beginPath();
+        tCtx.moveTo(100, 20); tCtx.lineTo(180, 100); tCtx.lineTo(100, 180); tCtx.lineTo(20, 100);
+        tCtx.closePath();
+        tCtx.fill();
 
-            setTimeout(() => {
-                toast.classList.add('translate-y-2', 'opacity-0');
-                setTimeout(() => toast.remove(), 300);
-            }, 3200);
+        tCtx.fillStyle = '#f59e0b';
+        tCtx.fillRect(65, 65, 70, 70);
+
+        tCtx.fillStyle = '#dc2626';
+        tCtx.beginPath();
+        tCtx.arc(100, 100, 22, 0, Math.PI * 2);
+        tCtx.fill();
+      } else if (type === 'daun') {
+        tCtx.strokeStyle = '#15803d';
+        tCtx.lineWidth = 10;
+        tCtx.beginPath();
+        tCtx.moveTo(40, 170);
+        tCtx.quadraticCurveTo(100, 100, 160, 30);
+        tCtx.stroke();
+
+        tCtx.fillStyle = '#22c55e';
+        const leaves = [[75, 130, -0.6], [125, 85, -0.6], [95, 145, 0.8], [140, 100, 0.8]];
+        leaves.forEach(([x, y, rot]) => {
+          tCtx.beginPath();
+          tCtx.ellipse(x, y, 26, 12, rot, 0, Math.PI * 2);
+          tCtx.fill();
+        });
+      }
+
+      const img = new Image();
+      img.onload = () => {
+        state.sourceImage = img;
+        state.highlightedHex = null;
+        processImage();
+      };
+      img.src = tempCanvas.toDataURL();
+    }
+
+    // Fungsi Utama: Hapus Background (Flood Fill dari tepi), Auto-Crop Objek, dan Kuantisasi Warna
+    function processImage() {
+      if (!state.sourceImage) return;
+
+      const img = state.sourceImage;
+      // Proses pada ukuran kerja maksimal 300px agar cepat & akurat
+      const maxWorkSize = 300;
+      const scale = Math.min(1, maxWorkSize / Math.max(img.width, img.height));
+      const w = Math.max(1, Math.round(img.width * scale));
+      const h = Math.max(1, Math.round(img.height * scale));
+
+      const workCanvas = document.createElement('canvas');
+      workCanvas.width = w;
+      workCanvas.height = h;
+      const wCtx = workCanvas.getContext('2d');
+      wCtx.drawImage(img, 0, 0, w, h);
+
+      const imgData = wCtx.getImageData(0, 0, w, h);
+      const data = imgData.data;
+
+      // 1. Penghapusan Background Berbasis Flood-Fill dari 4 Sudut Gambar
+      if (state.removeBg) {
+        const visited = new Uint8Array(w * h);
+        const queue = [];
+
+        // Ambil warna sampel dari sudut-sudut gambar
+        const corners = [0, w - 1, (h - 1) * w, (h - 1) * w + (w - 1)];
+        const tolSq = state.tolerance * state.tolerance * 3;
+
+        function colorDistSq(idx1, idx2) {
+          const dr = data[idx1] - data[idx2];
+          const dg = data[idx1 + 1] - data[idx2 + 1];
+          const db = data[idx1 + 2] - data[idx2 + 2];
+          return dr * dr + dg * dg + db * db;
         }
 
-        /**
-         * GENERATOR GAMBAR PRESET (SVG ke Image)
-         * Agar pengguna dapat langsung mencoba aplikasi tanpa upload
-         */
-        function loadPresetImage(type) {
-            let svgString = '';
-            if (type === 'bunga') {
-                // Motif Bunga Tradisional Karawo
-                svgString = `
-                <svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
-                    <rect width="400" height="400" fill="#FDFBF7"/>
-                    <!-- Kelopak Luar -->
-                    <g fill="#9E2A2B">
-                        <circle cx="200" cy="95" r="55"/>
-                        <circle cx="200" cy="305" r="55"/>
-                        <circle cx="95" cy="200" r="55"/>
-                        <circle cx="305" cy="200" r="55"/>
-                    </g>
-                    <!-- Kelopak Diagonal -->
-                    <g fill="#D95D39">
-                        <circle cx="125" cy="125" r="45"/>
-                        <circle cx="275" cy="125" r="45"/>
-                        <circle cx="125" cy="275" r="45"/>
-                        <circle cx="275" cy="275" r="45"/>
-                    </g>
-                    <!-- Daun Sudut -->
-                    <g fill="#2D6A4F">
-                        <path d="M20,20 Q90,20 90,90 Q20,90 20,20 Z"/>
-                        <path d="M380,20 Q310,20 310,90 Q380,90 380,20 Z"/>
-                        <path d="M20,380 Q90,380 90,310 Q20,310 20,380 Z"/>
-                        <path d="M380,380 Q310,380 310,310 Q380,310 380,380 Z"/>
-                    </g>
-                    <!-- Inti Bunga Emas -->
-                    <circle cx="200" cy="200" r="52" fill="#E09F3E"/>
-                    <circle cx="200" cy="200" r="24" fill="#5E1415"/>
-                </svg>`;
-            } else if (type === 'geometris') {
-                // Motif Geometris Ikat Karawo
-                svgString = `
-                <svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
-                    <rect width="400" height="400" fill="#FFFFFF"/>
-                    <rect x="20" y="20" width="360" height="360" fill="none" stroke="#7D1E1F" stroke-width="24"/>
-                    <polygon points="200,50 350,200 200,350 50,200" fill="#9E2A2B"/>
-                    <polygon points="200,95 305,200 200,305 95,200" fill="#E09F3E"/>
-                    <polygon points="200,140 260,200 200,260 140,200" fill="#1D3557"/>
-                    <rect x="175" y="175" width="50" height="50" fill="#FFFFFF"/>
-                </svg>`;
-            } else {
-                // Motif Sulur Daun
-                svgString = `
-                <svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
-                    <rect width="400" height="400" fill="#F8F3EA"/>
-                    <path d="M60,340 Q200,280 340,60" fill="none" stroke="#5E1415" stroke-width="22" stroke-linecap="round"/>
-                    <ellipse cx="130" cy="230" rx="55" ry="30" transform="rotate(-35 130 230)" fill="#2D6A4F"/>
-                    <ellipse cx="220" cy="265" rx="55" ry="30" transform="rotate(25 220 265)" fill="#40916C"/>
-                    <ellipse cx="215" cy="145" rx="55" ry="30" transform="rotate(-35 215 145)" fill="#2D6A4F"/>
-                    <ellipse cx="295" cy="180" rx="55" ry="30" transform="rotate(25 295 180)" fill="#40916C"/>
-                    <circle cx="340" cy="60" r="28" fill="#E09F3E"/>
-                </svg>`;
-            }
-
-            const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const img = new Image();
-            img.onload = () => {
-                state.sourceImage = img;
-                els.originalPreview.src = url;
-                state.highlightedColorIdx = null;
-                processImageToPattern();
-            };
-            img.src = url;
+        // Masukkan semua piksel di sepanjang garis tepi luar sebagai titik awal deteksi background
+        for (let x = 0; x < w; x++) {
+          queue.push([x, 0, 0]);
+          queue.push([x, h - 1, (h - 1) * w + x]);
+        }
+        for (let y = 0; y < h; y++) {
+          queue.push([0, y, y * w]);
+          queue.push([w - 1, y, y * w + (w - 1)]);
         }
 
-        /**
-         * HANDLER UPLOAD FILE (Input & Drag-and-Drop)
-         */
-        function handleFileUpload(file) {
-            if (!file) return;
-            const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
-            if (!validTypes.includes(file.type)) {
-                showToast('Format file tidak didukung. Gunakan JPG, PNG, atau WEBP.', 'error');
-                return;
-            }
+        let head = 0;
+        while (head < queue.length) {
+          const [cx, cy, refPos] = queue[head++];
+          const pos = cy * w + cx;
+          if (visited[pos]) continue;
+          visited[pos] = 1;
 
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const img = new Image();
-                img.onload = () => {
-                    state.sourceImage = img;
-                    els.originalPreview.src = e.target.result;
-                    state.highlightedColorIdx = null;
-                    processImageToPattern();
-                    showToast('Gambar berhasil dimuat & dikonversi menjadi pola!', 'success');
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
+          const pIdx = pos * 4;
+          const rIdx = refPos * 4;
+
+          // Jika sudah transparan dari bawaan PNG atau warnanya mirip background tepi
+          if (data[pIdx + 3] < 50 || colorDistSq(pIdx, rIdx) <= tolSq) {
+            data[pIdx + 3] = 0; // Jadikan transparan (hapus background)
+
+            // Cek 4 tetangga
+            if (cx > 0 && !visited[pos - 1]) queue.push([cx - 1, cy, refPos]);
+            if (cx < w - 1 && !visited[pos + 1]) queue.push([cx + 1, cy, refPos]);
+            if (cy > 0 && !visited[pos - w]) queue.push([cx, cy - 1, refPos]);
+            if (cy < h - 1 && !visited[pos + w]) queue.push([cx, cy + 1, refPos]);
+          }
+        }
+        wCtx.putImageData(imgData, 0, 0);
+      }
+
+      // 2. Auto-Crop agar hanya fokus pada batas area objek saja
+      let minX = 0, minY = 0, maxX = w - 1, maxY = h - 1;
+      if (state.autoCrop) {
+        minX = w; minY = h; maxX = 0; maxY = 0;
+        let hasPixel = false;
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            const alpha = data[(y * w + x) * 4 + 3];
+            if (alpha > 128) {
+              hasPixel = true;
+              if (x < minX) minX = x;
+              if (x > maxX) maxX = x;
+              if (y < minY) minY = y;
+              if (y > maxY) maxY = y;
+            }
+          }
+        }
+        if (!hasPixel) { minX = 0; minY = 0; maxX = w - 1; maxY = h - 1; }
+      }
+
+      const cropW = Math.max(1, maxX - minX + 1);
+      const cropH = Math.max(1, maxY - minY + 1);
+
+      // 3. Pixelate ke Grid Strimin Sesuai Jumlah Kolom
+      const cols = state.cols;
+      const rows = Math.max(1, Math.round(cols * (cropH / cropW)));
+
+      const gridCanvas = document.createElement('canvas');
+      gridCanvas.width = cols;
+      gridCanvas.height = rows;
+      const gCtx = gridCanvas.getContext('2d');
+      gCtx.imageSmoothingEnabled = false;
+      gCtx.drawImage(workCanvas, minX, minY, cropW, cropH, 0, 0, cols, rows);
+
+      const gridPixels = gCtx.getImageData(0, 0, cols, rows).data;
+
+      // Kumpulkan piksel objek yang solid (bukan transparan)
+      const solidPixels = [];
+      for (let i = 0; i < gridPixels.length; i += 4) {
+        if (gridPixels[i + 3] > 128) {
+          solidPixels.push([gridPixels[i], gridPixels[i + 1], gridPixels[i + 2]]);
+        }
+      }
+
+      // 4. Reduksi Warna (K-Means Clustering) agar menjadi warna vektor tegas
+      const centroids = kMeansColors(solidPixels, state.numColors);
+
+      // Susun gridData 2D
+      const newGrid = [];
+      const colorCounts = {};
+      let totalStitches = 0;
+
+      for (let r = 0; r < rows; r++) {
+        const rowArr = [];
+        for (let c = 0; c < cols; c++) {
+          const idx = (r * cols + c) * 4;
+          if (gridPixels[idx + 3] <= 128) {
+            rowArr.push(null); // Area latar kosong
+          } else {
+            const nearest = findNearestColor(
+              [gridPixels[idx], gridPixels[idx + 1], gridPixels[idx + 2]],
+              centroids
+            );
+            const hex = rgbToHex(nearest[0], nearest[1], nearest[2]);
+            rowArr.push(hex);
+            colorCounts[hex] = (colorCounts[hex] || 0) + 1;
+            totalStitches++;
+          }
+        }
+        newGrid.push(rowArr);
+      }
+
+      state.gridData = newGrid;
+      state.palette = Object.entries(colorCounts)
+        .map(([hex, count]) => ({ hex, count }))
+        .sort((a, b) => b.count - a.count);
+
+      // Perbarui Info UI
+      document.getElementById('info-dim').textContent = `${cols} × ${rows}`;
+      document.getElementById('info-stitches').textContent = totalStitches;
+
+      renderPalette();
+      renderPattern();
+    }
+
+    // Algoritma K-Means Sederhana untuk Pengelompokan Warna Benang
+    function kMeansColors(pixels, k) {
+      if (pixels.length === 0) return [[0, 0, 0]];
+      if (pixels.length <= k) return pixels;
+
+      // Inisialisasi centroid secara merata
+      let centroids = [];
+      const step = Math.floor(pixels.length / k);
+      for (let i = 0; i < k; i++) {
+        centroids.push([...pixels[i * step]]);
+      }
+
+      for (let iter = 0; iter < 8; iter++) {
+        const clusters = Array.from({ length: k }, () => []);
+        for (const p of pixels) {
+          let minDist = Infinity, bestIdx = 0;
+          for (let i = 0; i < k; i++) {
+            const d = (p[0] - centroids[i][0]) ** 2 + (p[1] - centroids[i][1]) ** 2 + (p[2] - centroids[i][2]) ** 2;
+            if (d < minDist) { minDist = d; bestIdx = i; }
+          }
+          clusters[bestIdx].push(p);
         }
 
-        /**
-         * ALGORITMA K-MEANS CLUSTERING UNTUK KUANTISASI WARNA BENANG
-         * Mengelompokkan ribuan warna pixel menjadi K warna dominan yang tegas
-         */
-        function quantizeColorsKMeans(pixels, k) {
-            const numPixels = pixels.length;
-            if (numPixels === 0) return { palette: [], assignments: [] };
-
-            // 1. Inisialisasi centroid menggunakan K-Means++ sederhana (sampling terdistribusi)
-            const centroids = [];
-            // Ambil pixel pertama
-            centroids.push([...pixels[0]]);
-
-            // Ambil centroid berikutnya berdasarkan jarak terjauh agar warna beragam tertangkap
-            while (centroids.length < k) {
-                let maxDist = -1;
-                let bestPixel = pixels[Math.floor(Math.random() * numPixels)];
-                
-                // Cek sampel acak (maks 300 titik agar super cepat)
-                const step = Math.max(1, Math.floor(numPixels / 300));
-                for (let i = 0; i < numPixels; i += step) {
-                    const p = pixels[i];
-                    let minDistToCentroid = Infinity;
-                    for (let c = 0; c < centroids.length; c++) {
-                        const d = colorDistanceSq(p, centroids[c]);
-                        if (d < minDistToCentroid) minDistToCentroid = d;
-                    }
-                    if (minDistToCentroid > maxDist) {
-                        maxDist = minDistToCentroid;
-                        bestPixel = p;
-                    }
-                }
-                centroids.push([...bestPixel]);
-            }
-
-            const assignments = new Int32Array(numPixels);
-            const maxIterations = 12;
-
-            // 2. Iterasi K-Means
-            for (let iter = 0; iter < maxIterations; iter++) {
-                let changed = false;
-                const sumR = new Float64Array(k);
-                const sumG = new Float64Array(k);
-                const sumB = new Float64Array(k);
-                const counts = new Int32Array(k);
-
-                // Assign setiap pixel ke centroid terdekat
-                for (let i = 0; i < numPixels; i++) {
-                    const p = pixels[i];
-                    let bestIdx = 0;
-                    let bestDist = Infinity;
-
-                    for (let c = 0; c < k; c++) {
-                        const d = colorDistanceSq(p, centroids[c]);
-                        if (d < bestDist) {
-                            bestDist = d;
-                            bestIdx = c;
-                        }
-                    }
-
-                    if (assignments[i] !== bestIdx) {
-                        assignments[i] = bestIdx;
-                        changed = true;
-                    }
-
-                    sumR[bestIdx] += p[0];
-                    sumG[bestIdx] += p[1];
-                    sumB[bestIdx] += p[2];
-                    counts[bestIdx]++;
-                }
-
-                // Update posisi centroid
-                for (let c = 0; c < k; c++) {
-                    if (counts[c] > 0) {
-                        centroids[c][0] = Math.round(sumR[c] / counts[c]);
-                        centroids[c][1] = Math.round(sumG[c] / counts[c]);
-                        centroids[c][2] = Math.round(sumB[c] / counts[c]);
-                    }
-                }
-
-                if (!changed) break;
-            }
-
-            // 3. Susun palet & urutkan berdasarkan jumlah tusukan terbanyak
-            const finalCounts = new Int32Array(k);
-            for (let i = 0; i < numPixels; i++) {
-                finalCounts[assignments[i]]++;
-            }
-
-            // Gabungkan centroid dengan count-nya, lalu filter yang count > 0
-            let rawPalette = centroids.map((rgb, idx) => ({
-                oldIdx: idx,
-                r: rgb[0],
-                g: rgb[1],
-                b: rgb[2],
-                count: finalCounts[idx]
-            })).filter(item => item.count > 0);
-
-            // Urutkan dari warna yang paling banyak dipakai ke paling sedikit
-            rawPalette.sort((a, b) => b.count - a.count);
-
-            // Remap indeks agar sesuai urutan baru (1, 2, 3...)
-            const indexMap = new Int32Array(k);
-            rawPalette.forEach((item, newIdx) => {
-                indexMap[item.oldIdx] = newIdx;
-                item.id = newIdx + 1;
-                item.hex = rgbToHex(item.r, item.g, item.b);
-            });
-
-            const remappedAssignments = new Int32Array(numPixels);
-            for (let i = 0; i < numPixels; i++) {
-                remappedAssignments[i] = indexMap[assignments[i]];
-            }
-
-            return {
-                palette: rawPalette,
-                assignments: remappedAssignments
-            };
+        for (let i = 0; i < k; i++) {
+          if (clusters[i].length > 0) {
+            let r = 0, g = 0, b = 0;
+            for (const p of clusters[i]) { r += p[0]; g += p[1]; b += p[2]; }
+            centroids[i] = [
+              Math.round(r / clusters[i].length),
+              Math.round(g / clusters[i].length),
+              Math.round(b / clusters[i].length)
+            ];
+          }
         }
+      }
+      return centroids;
+    }
 
-        function colorDistanceSq(c1, c2) {
-            // Pembobotan persepsi mata manusia (Redmean approximation)
-            const rmean = (c1[0] + c2[0]) / 2;
-            const dr = c1[0] - c2[0];
-            const dg = c1[1] - c2[1];
-            const db = c1[2] - c2[2];
-            return (((512 + rmean) * dr * dr) >> 8) + 4 * dg * dg + (((767 - rmean) * db * db) >> 8);
-        }
+    function findNearestColor(rgb, centroids) {
+      let minDist = Infinity, best = centroids[0];
+      for (const c of centroids) {
+        const d = (rgb[0] - c[0]) ** 2 + (rgb[1] - c[1]) ** 2 + (rgb[2] - c[2]) ** 2;
+        if (d < minDist) { minDist = d; best = c; }
+      }
+      return best;
+    }
 
-        function rgbToHex(r, g, b) {
-            return "#" + [r, g, b].map(x => {
-                const hex = Math.max(0, Math.min(255, Math.round(x))).toString(16);
-                return hex.length === 1 ? "0" + hex : hex;
-            }).join("").toUpperCase();
-        }
+    function rgbToHex(r, g, b) {
+      return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase();
+    }
 
-        function hexToRgb(hex) {
-            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            return result ? {
-                r: parseInt(result[1], 16),
-                g: parseInt(result[2], 16),
-                b: parseInt(result[3], 16)
-            } : { r: 0, g: 0, b: 0 };
-        }
+    // Render Pola Titik ke Kanvas
+    function renderPattern() {
+      const rows = state.gridData.length;
+      if (rows === 0) return;
+      const cols = state.gridData[0].length;
 
-        /**
-         * PROSES KONVERSI GAMBAR -> GRID PIXEL -> KUANTISASI WARNA
-         */
-        function processImageToPattern() {
-            if (!state.sourceImage) return;
+      // Ukuran per kotak pixel besar
+      const cellSize = Math.max(12, Math.min(24, Math.floor(720 / cols)));
+      canvas.width = cols * cellSize;
+      canvas.height = rows * cellSize;
 
-            const img = state.sourceImage;
-            const aspectRatio = img.height / img.width;
-            
-            state.gridCols = parseInt(els.gridCols.value, 10);
-            // Hitung jumlah baris proporsional (minimal 10, maksimal 120)
-            state.gridRows = Math.max(10, Math.min(120, Math.round(state.gridCols * aspectRatio)));
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Update label UI
-            els.gridColsVal.textContent = `${state.gridCols} × ${state.gridRows} kotak`;
-            els.infoDimensions.textContent = `${state.gridCols} × ${state.gridRows}`;
-            els.infoTotalStitches.textContent = (state.gridCols * state.gridRows).toLocaleString('id-ID');
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const hex = state.gridData[r][c];
+          const x = c * cellSize;
+          const y = r * cellSize;
 
-            // Buat offscreen canvas kecil seukuran grid untuk sampling rata-rata area
-            const offCanvas = document.createElement('canvas');
-            offCanvas.width = state.gridCols;
-            offCanvas.height = state.gridRows;
-            const ctx = offCanvas.getContext('2d');
+          // Gambar garis kotak strimin tipis jika aktif
+          if (state.showGrid) {
+            ctx.strokeStyle = 'rgba(148, 163, 184, 0.35)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x, y, cellSize, cellSize);
+          }
 
-            // Isi latar putih terlebih dahulu (jika PNG transparan)
-            ctx.fillStyle = '#FFFFFF';
-            ctx.fillRect(0, 0, state.gridCols, state.gridRows);
+          if (!hex) continue; // Lewati background yang sudah dihapus
 
-            // Terapkan filter Brightness & Contrast sebelum menggambar
-            const bVal = 100 + parseInt(state.brightness, 10);
-            const cVal = 100 + parseInt(state.contrast, 10);
-            ctx.filter = `brightness(${bVal}%) contrast(${cVal}%)`;
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-            ctx.drawImage(img, 0, 0, state.gridCols, state.gridRows);
-
-            const imgData = ctx.getImageData(0, 0, state.gridCols, state.gridRows).data;
-            const pixels = [];
-            for (let i = 0; i < imgData.length; i += 4) {
-                pixels.push([imgData[i], imgData[i + 1], imgData[i + 2]]);
-            }
-
-            // Jalankan K-Means Quantization
-            const { palette, assignments } = quantizeColorsKMeans(pixels, state.colorCount);
-            state.palette = palette;
-
-            // Reset highlight jika indeks warna di luar palet baru
-            if (state.highlightedColorIdx !== null && state.highlightedColorIdx >= palette.length) {
-                state.highlightedColorIdx = null;
-            }
-
-            // Susun ke array 2D [row][col]
-            state.gridIndices = [];
-            for (let r = 0; r < state.gridRows; r++) {
-                const rowArr = [];
-                for (let c = 0; c < state.gridCols; c++) {
-                    rowArr.push(assignments[r * state.gridCols + c]);
-                }
-                state.gridIndices.push(rowArr);
-            }
-
-            renderPaletteUI();
-            renderPatternCanvas();
-        }
-
-        /**
-         * RENDER KARTU PALET WARNA DI SIDEBAR
-         */
-        function renderPaletteUI() {
-            els.paletteList.innerHTML = '';
-
-            if (state.highlightedColorIdx !== null) {
-                els.btnClearHighlight.classList.remove('hidden');
-            } else {
-                els.btnClearHighlight.classList.add('hidden');
-            }
-
-            state.palette.forEach((color, idx) => {
-                const isHighlighted = state.highlightedColorIdx === idx;
-                const card = document.createElement('div');
-                card.className = `flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer select-none ${
-                    isHighlighted 
-                    ? 'bg-marun-50/70 border-marun-600 ring-2 ring-marun-600/20' 
-                    : 'bg-white border-krem-200 hover:border-krem-300 hover:bg-krem-50/50'
-                }`;
-
-                // Tentukan kontras teks untuk nomor urut di atas swatch
-                const luminance = (0.299 * color.r + 0.587 * color.g + 0.114 * color.b) / 255;
-                const textColorClass = luminance > 0.55 ? 'text-stone-900' : 'text-white';
-
-                card.innerHTML = `
-                    <div class="flex items-center gap-3 min-w-0">
-                        <div class="w-8 h-8 rounded-lg shadow-inner border border-black/15 flex items-center justify-center font-bold text-xs shrink-0 ${textColorClass}" style="background-color: ${color.hex};">
-                            ${color.id}
-                        </div>
-                        <div class="min-w-0">
-                            <div class="flex items-center gap-1.5">
-                                <span class="text-xs font-bold text-stone-800 font-mono">${color.hex}</span>
-                                ${isHighlighted ? '<span class="text-[10px] bg-marun-700 text-white px-1.5 py-0.2 rounded font-semibold">Disorot</span>' : ''}
-                            </div>
-                            <p class="text-[11px] text-stone-500 truncate">${color.count.toLocaleString('id-ID')} titik (${Math.round((color.count / (state.gridCols * state.gridRows)) * 100)}%)</p>
-                        </div>
-                    </div>
-                    <button type="button" class="edit-color-btn p-2 rounded-lg text-stone-400 hover:text-marun-700 hover:bg-krem-100 transition-colors" title="Ganti warna benang ini">
-                        <i data-lucide="paintbrush" class="w-4 h-4"></i>
-                    </button>
-                `;
-
-                // Klik kartu untuk menyorot (highlight) warna di kanvas
-                card.addEventListener('click', (e) => {
-                    if (e.target.closest('.edit-color-btn')) return;
-                    state.highlightedColorIdx = (state.highlightedColorIdx === idx) ? null : idx;
-                    renderPaletteUI();
-                    renderPatternCanvas();
-                });
-
-                // Klik tombol kuas untuk mengganti warna benang
-                const editBtn = card.querySelector('.edit-color-btn');
-                editBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    state.editingColorIdx = idx;
-                    els.hiddenColorPicker.value = color.hex;
-                    els.hiddenColorPicker.click();
-                });
-
-                els.paletteList.appendChild(card);
-            });
-
-            lucide.createIcons();
-        }
-
-        /**
-         * RENDER KANVAS POLA KARAWO INTERAKTIF
-         */
-        function renderPatternCanvas(targetCanvas = els.patternCanvas, customCellSize = null) {
-            if (!state.gridIndices.length) return;
-
-            const cols = state.gridCols;
-            const rows = state.gridRows;
-
-            // Hitung ukuran sel (pixel per kotak) agar nyaman dilihat
-            let cellSize = customCellSize;
-            if (!cellSize) {
-                const maxDim = Math.max(cols, rows);
-                // Buat ukuran dasar sekitar 640px lalu kalikan dengan faktor zoom
-                const baseCell = Math.max(8, Math.min(26, Math.floor(640 / maxDim)));
-                cellSize = Math.round(baseCell * state.zoom);
-            }
-
-            const rulerMargin = state.showRuler ? Math.max(24, Math.round(cellSize * 1.35)) : 0;
-            const canvasWidth = cols * cellSize + rulerMargin;
-            const canvasHeight = rows * cellSize + rulerMargin;
-
-            targetCanvas.width = canvasWidth;
-            targetCanvas.height = canvasHeight;
-
-            const ctx = targetCanvas.getContext('2d');
-            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-
-            // Latar putih untuk keseluruhan area pola
-            ctx.fillStyle = '#FFFFFF';
-            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-
-            // 1. Gambar Penggaris Nomor Kolom (Atas) & Nomor Baris (Kiri)
-            if (state.showRuler) {
-                ctx.fillStyle = '#F8F3EA';
-                ctx.fillRect(rulerMargin, 0, cols * cellSize, rulerMargin);
-                ctx.fillRect(0, rulerMargin, rulerMargin, rows * cellSize);
-
-                ctx.fillStyle = '#57534E';
-                const fontSize = Math.max(8, Math.min(12, Math.floor(cellSize * 0.55)));
-                ctx.font = `600 ${fontSize}px "Plus Jakarta Sans", sans-serif`;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-
-                // Tentukan interval angka agar tidak bertumpuk jika sel kecil
-                const step = cellSize < 12 ? 5 : (cellSize < 16 ? 2 : 1);
-
-                for (let c = 0; c < cols; c++) {
-                    const num = c + 1;
-                    if (num === 1 || num % step === 0 || num === cols) {
-                        const x = rulerMargin + c * cellSize + cellSize / 2;
-                        ctx.fillText(num.toString(), x, rulerMargin / 2);
-                    }
-                }
-
-                for (let r = 0; r < rows; r++) {
-                    const num = r + 1;
-                    if (num === 1 || num % step === 0 || num === rows) {
-                        const y = rulerMargin + r * cellSize + cellSize / 2;
-                        ctx.fillText(num.toString(), rulerMargin / 2, y);
-                    }
-                }
-            }
-
-            // 2. Gambar Setiap Titik / Kotak Sulaman
-            for (let r = 0; r < rows; r++) {
-                for (let c = 0; c < cols; c++) {
-                    const colorIdx = state.gridIndices[r][c];
-                    const color = state.palette[colorIdx];
-                    if (!color) continue;
-
-                    const x = rulerMargin + c * cellSize;
-                    const y = rulerMargin + r * cellSize;
-
-                    // Cek mode sorot (highlight)
-                    const isDimmed = state.highlightedColorIdx !== null && state.highlightedColorIdx !== colorIdx;
-                    ctx.globalAlpha = isDimmed ? 0.14 : 1.0;
-
-                    ctx.fillStyle = color.hex;
-                    ctx.strokeStyle = color.hex;
-
-                    if (state.shape === 'square') {
-                        // Kotak Strimin Penuh
-                        ctx.fillRect(x, y, cellSize, cellSize);
-                    } else if (state.shape === 'circle') {
-                        // Titik Bulat (Beads / French Knot)
-                        const radius = (cellSize * 0.42);
-                        ctx.beginPath();
-                        ctx.arc(x + cellSize / 2, y + cellSize / 2, Math.max(1.5, radius), 0, Math.PI * 2);
-                        ctx.fill();
-                    } else if (state.shape === 'cross') {
-                        // Tanda Silang (Cross-Stitch / Tusuk Silang X)
-                        const pad = Math.max(1.5, cellSize * 0.2);
-                        ctx.lineWidth = Math.max(1.5, cellSize * 0.18);
-                        ctx.lineCap = 'round';
-                        ctx.beginPath();
-                        ctx.moveTo(x + pad, y + pad);
-                        ctx.lineTo(x + cellSize - pad, y + cellSize - pad);
-                        ctx.moveTo(x + cellSize - pad, y + pad);
-                        ctx.lineTo(x + pad, y + cellSize - pad);
-                        ctx.stroke();
-                    }
-
-                    // 3. Tampilkan Nomor Kode Warna di Dalam Sel (jika diaktifkan & ukuran memadai)
-                    if (state.showNumbers && cellSize >= 13 && !isDimmed) {
-                        const luminance = (0.299 * color.r + 0.587 * color.g + 0.114 * color.b) / 255;
-                        // Jika bentuk silang/bulat, latar belakang sel adalah putih sehingga teks gelap lebih terbaca
-                        if (state.shape === 'square') {
-                            ctx.fillStyle = luminance > 0.55 ? '#1C1917' : '#FFFFFF';
-                        } else {
-                            ctx.fillStyle = '#1C1917';
-                        }
-                        const numFontSize = Math.max(7, Math.floor(cellSize * 0.48));
-                        ctx.font = `700 ${numFontSize}px "Plus Jakarta Sans", sans-serif`;
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        ctx.fillText(color.id.toString(), x + cellSize / 2, y + cellSize / 2 + 0.5);
-                    }
-                }
-            }
-
+          // Efek redup jika sedang menyorot warna tertentu
+          if (state.highlightedHex && state.highlightedHex !== hex) {
+            ctx.globalAlpha = 0.15;
+          } else {
             ctx.globalAlpha = 1.0;
+          }
 
-            // 4. Gambar Garis Bantu Grid Strimin
-            if (state.showGrid) {
-                for (let c = 0; c <= cols; c++) {
-                    const x = rulerMargin + c * cellSize;
-                    const isMajor = (c % 5 === 0); // Garis tebal setiap 5 kolom memudahkan hitungan pengrajin
-                    ctx.beginPath();
-                    ctx.moveTo(x, rulerMargin);
-                    ctx.lineTo(x, canvasHeight);
-                    ctx.strokeStyle = isMajor ? 'rgba(125, 30, 31, 0.45)' : 'rgba(120, 113, 108, 0.22)';
-                    ctx.lineWidth = isMajor ? 1.25 : 0.75;
-                    ctx.stroke();
-                }
+          ctx.fillStyle = hex;
+          ctx.strokeStyle = hex;
 
-                for (let r = 0; r <= rows; r++) {
-                    const y = rulerMargin + r * cellSize;
-                    const isMajor = (r % 5 === 0); // Garis tebal setiap 5 baris
-                    ctx.beginPath();
-                    ctx.moveTo(rulerMargin, y);
-                    ctx.lineTo(canvasWidth, y);
-                    ctx.strokeStyle = isMajor ? 'rgba(125, 30, 31, 0.45)' : 'rgba(120, 113, 108, 0.22)';
-                    ctx.lineWidth = isMajor ? 1.25 : 0.75;
-                    ctx.stroke();
-                }
-            }
-
-            // Simpan metadata ukuran sel pada elemen kanvas untuk keperluan tooltip hover
-            targetCanvas.dataset.cellSize = cellSize;
-            targetCanvas.dataset.rulerMargin = rulerMargin;
+          if (state.shape === 'square') {
+            const pad = state.showGrid ? 1 : 0;
+            ctx.fillRect(x + pad, y + pad, cellSize - pad * 2, cellSize - pad * 2);
+          } else if (state.shape === 'circle') {
+            ctx.beginPath();
+            ctx.arc(x + cellSize / 2, y + cellSize / 2, cellSize * 0.42, 0, Math.PI * 2);
+            ctx.fill();
+          } else if (state.shape === 'cross') {
+            const pad = cellSize * 0.2;
+            ctx.lineWidth = Math.max(2, cellSize * 0.22);
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(x + pad, y + pad);
+            ctx.lineTo(x + cellSize - pad, y + cellSize - pad);
+            ctx.moveTo(x + cellSize - pad, y + pad);
+            ctx.lineTo(x + pad, y + cellSize - pad);
+            ctx.stroke();
+          }
         }
+      }
+      ctx.globalAlpha = 1.0;
+    }
 
-        /**
-         * EKSPOR PNG RESOLUSI TINGGI LENGKAP DENGAN LEGENDA BENANG
-         */
-        function exportHighResPattern() {
-            if (!state.gridIndices.length) return;
+    // Render Daftar Palet Benang
+    function renderPalette() {
+      const container = document.getElementById('palette-container');
+      container.innerHTML = '';
 
-            // Render pola utama pada ukuran sel 24px agar tajam saat dicetak
-            const exportCellSize = 24;
-            const patternCanvas = document.createElement('canvas');
-            
-            // Pastikan nomor tepi & grid aktif sementara untuk cetakan
-            const prevRuler = state.showRuler;
-            const prevHighlight = state.highlightedColorIdx;
-            state.showRuler = true;
-            state.highlightedColorIdx = null;
-            
-            renderPatternCanvas(patternCanvas, exportCellSize);
-            
-            // Kembalikan state tampilan layar
-            state.showRuler = prevRuler;
-            state.highlightedColorIdx = prevHighlight;
+      state.palette.forEach(item => {
+        const isSelected = state.highlightedHex === item.hex;
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = `flex items-center gap-2.5 p-2 rounded-lg border text-left transition cursor-pointer ${
+          isSelected ? 'border-amber-600 bg-amber-50 ring-2 ring-amber-200' : 'border-slate-200 hover:border-slate-300 bg-white'
+        }`;
 
-            // Buat kanvas gabungan (Header Judul + Pola Strimin + Legenda Warna Benang)
-            const padding = 40;
-            const headerHeight = 75;
-            const legendCols = Math.min(4, Math.max(2, Math.floor(patternCanvas.width / 210)));
-            const legendRows = Math.ceil(state.palette.length / legendCols);
-            const legendHeight = 60 + legendRows * 42;
+        card.innerHTML = `
+          <span class="w-6 h-6 rounded-md border border-slate-300 shrink-0" style="background-color: ${item.hex}"></span>
+          <div class="min-w-0">
+            <p class="text-xs font-bold text-slate-800 truncate">${item.hex}</p>
+            <p class="text-[11px] text-slate-500">${item.count} titik</p>
+          </div>
+        `;
 
-            const finalWidth = Math.max(680, patternCanvas.width + padding * 2);
-            const finalHeight = headerHeight + patternCanvas.height + legendHeight + padding * 2;
+        card.addEventListener('click', () => {
+          state.highlightedHex = isSelected ? null : item.hex;
+          document.getElementById('btn-reset-highlight').classList.toggle('hidden', !state.highlightedHex);
+          renderPalette();
+          renderPattern();
+        });
 
-            const outCanvas = document.createElement('canvas');
-            outCanvas.width = finalWidth;
-            outCanvas.height = finalHeight;
-            const ctx = outCanvas.getContext('2d');
+        container.appendChild(card);
+      });
+    }
 
-            // Latar Belakang Krem Hangat
-            ctx.fillStyle = '#FDFBF7';
-            ctx.fillRect(0, 0, finalWidth, finalHeight);
+    // Ekspor File Vektor (SVG)
+    document.getElementById('btn-export-svg').addEventListener('click', () => {
+      const rows = state.gridData.length;
+      if (rows === 0) return;
+      const cols = state.gridData[0].length;
+      const size = 20;
 
-            // Bingkai Dekoratif Marun
-            ctx.strokeStyle = '#9E2A2B';
-            ctx.lineWidth = 4;
-            ctx.strokeRect(16, 16, finalWidth - 32, finalHeight - 32);
+      let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${cols * size} ${rows * size}" width="${cols * size}" height="${rows * size}">`;
+      
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const hex = state.gridData[r][c];
+          if (!hex) continue;
+          const x = c * size;
+          const y = r * size;
 
-            // Header Judul
-            ctx.fillStyle = '#420C0D';
-            ctx.font = 'bold 26px "Lora", Georgia, serif';
-            ctx.textAlign = 'left';
-            ctx.fillText('Pola Sulaman Karawo — Khas Gorontalo', padding, padding + 24);
-
-            ctx.fillStyle = '#78716C';
-            ctx.font = '500 14px "Plus Jakarta Sans", sans-serif';
-            ctx.fillText(`Dimensi: ${state.gridCols} Kolom × ${state.gridRows} Baris  |  Total: ${(state.gridCols * state.gridRows).toLocaleString('id-ID')} Titik  |  ${state.palette.length} Warna Benang`, padding, padding + 50);
-
-            // Tempel Kanvas Pola di Tengah
-            const patternX = Math.floor((finalWidth - patternCanvas.width) / 2);
-            const patternY = padding + headerHeight;
-            ctx.drawImage(patternCanvas, patternX, patternY);
-
-            // Bagian Legenda Warna Benang di Bawah
-            const legendStartY = patternY + patternCanvas.height + 30;
-            ctx.fillStyle = '#420C0D';
-            ctx.font = 'bold 16px "Plus Jakarta Sans", sans-serif';
-            ctx.fillText('Daftar Kode Warna & Kebutuhan Titik Benang:', padding, legendStartY);
-
-            const colWidth = (finalWidth - padding * 2) / legendCols;
-            state.palette.forEach((color, idx) => {
-                const c = idx % legendCols;
-                const r = Math.floor(idx / legendCols);
-                const itemX = padding + c * colWidth;
-                const itemY = legendStartY + 20 + r * 40;
-
-                // Kotak Warna
-                ctx.fillStyle = color.hex;
-                ctx.fillRect(itemX, itemY, 26, 26);
-                ctx.strokeStyle = '#44403C';
-                ctx.lineWidth = 1;
-                ctx.strokeRect(itemX, itemY, 26, 26);
-
-                // Nomor di dalam kotak warna
-                const luminance = (0.299 * color.r + 0.587 * color.g + 0.114 * color.b) / 255;
-                ctx.fillStyle = luminance > 0.55 ? '#1C1917' : '#FFFFFF';
-                ctx.font = 'bold 12px "Plus Jakarta Sans", sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText(color.id.toString(), itemX + 13, itemY + 17);
-
-                // Teks Kode HEX & Jumlah Tusukan
-                ctx.fillStyle = '#292524';
-                ctx.font = 'bold 13px "Plus Jakarta Sans", sans-serif';
-                ctx.textAlign = 'left';
-                ctx.fillText(`${color.hex}`, itemX + 36, itemY + 12);
-
-                ctx.fillStyle = '#78716C';
-                ctx.font = '12px "Plus Jakarta Sans", sans-serif';
-                ctx.fillText(`${color.count.toLocaleString('id-ID')} titik`, itemX + 36, itemY + 26);
-            });
-
-            // Picu Unduhan File PNG
-            const link = document.createElement('a');
-            link.download = `Pola-Karawo-${state.gridCols}x${state.gridRows}.png`;
-            link.href = outCanvas.toDataURL('image/png');
-            link.click();
-
-            showToast('Pola Karawo resolusi tinggi berhasil diunduh!', 'success');
+          if (state.shape === 'square') {
+            svgContent += `<rect x="${x}" y="${y}" width="${size}" height="${size}" fill="${hex}" />`;
+          } else if (state.shape === 'circle') {
+            svgContent += `<circle cx="${x + size / 2}" cy="${y + size / 2}" r="${size * 0.42}" fill="${hex}" />`;
+          } else if (state.shape === 'cross') {
+            const p = size * 0.2;
+            svgContent += `<path d="M${x + p},${y + p} L${x + size - p},${y + size - p} M${x + size - p},${y + p} L${x + p},${y + size - p}" stroke="${hex}" stroke-width="${size * 0.22}" stroke-linecap="round" />`;
+          }
         }
+      }
+      svgContent += `</svg>`;
 
-        /**
-         * EVENT LISTENERS & INTERAKSI UI
-         */
-        // 1. Upload & Drag-and-Drop
-        els.dropzone.addEventListener('click', () => els.fileInput.click());
-        els.fileInput.addEventListener('change', (e) => handleFileUpload(e.target.files[0]));
+      const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `pola-karawo-vektor-${cols}x${rows}.svg`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
 
-        els.dropzone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            els.dropzone.classList.add('border-marun-600', 'bg-krem-100');
-        });
-        els.dropzone.addEventListener('dragleave', () => {
-            els.dropzone.classList.remove('border-marun-600', 'bg-krem-100');
-        });
-        els.dropzone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            els.dropzone.classList.remove('border-marun-600', 'bg-krem-100');
-            if (e.dataTransfer.files.length) {
-                handleFileUpload(e.dataTransfer.files[0]);
-            }
-        });
+    // Ekspor Pola Cetak (PNG dengan Nomor Baris/Kolom & Legenda)
+    document.getElementById('btn-export-png').addEventListener('click', () => {
+      const rows = state.gridData.length;
+      if (rows === 0) return;
+      const cols = state.gridData[0].length;
 
-        // 2. Preset Buttons
-        document.querySelectorAll('.preset-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                loadPresetImage(btn.dataset.preset);
-            });
-        });
+      const cell = 24;
+      const margin = 40;
+      const legendHeight = Math.ceil(state.palette.length / 4) * 36 + 50;
 
-        // 3. Slider Resolusi Grid & Jumlah Warna
-        els.gridCols.addEventListener('input', () => {
-            processImageToPattern();
-        });
+      const outCanvas = document.createElement('canvas');
+      outCanvas.width = cols * cell + margin * 2;
+      outCanvas.height = rows * cell + margin * 2 + legendHeight;
+      const oCtx = outCanvas.getContext('2d');
 
-        els.colorCount.addEventListener('input', () => {
-            state.colorCount = parseInt(els.colorCount.value, 10);
-            els.colorCountVal.textContent = `${state.colorCount} Warna`;
-            processImageToPattern();
-        });
+      // Latar putih untuk cetak
+      oCtx.fillStyle = '#ffffff';
+      oCtx.fillRect(0, 0, outCanvas.width, outCanvas.height);
 
-        // 4. Pilihan Bentuk Titik (Kotak / Bulat / Silang)
-        els.shapeBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                els.shapeBtns.forEach(b => {
-                    b.classList.remove('bg-marun-700', 'text-white', 'border-marun-700', 'shadow-sm');
-                    b.classList.add('bg-white', 'text-stone-700', 'border-krem-200');
-                });
-                btn.classList.remove('bg-white', 'text-stone-700', 'border-krem-200');
-                btn.classList.add('bg-marun-700', 'text-white', 'border-marun-700', 'shadow-sm');
-
-                state.shape = btn.dataset.shape;
-                renderPatternCanvas();
-            });
-        });
-
-        // 5. Checkbox Tampilan Grid, Penggaris, & Nomor Dalam Sel
-        els.toggleGrid.addEventListener('change', (e) => {
-            state.showGrid = e.target.checked;
-            renderPatternCanvas();
-        });
-        els.toggleRuler.addEventListener('change', (e) => {
-            state.showRuler = e.target.checked;
-            renderPatternCanvas();
-        });
-        els.toggleNumbers.addEventListener('change', (e) => {
-            state.showNumbers = e.target.checked;
-            if (state.showNumbers && state.zoom < 1.2 && state.gridCols > 45) {
-                showToast('Perbesar (Zoom In) kanvas agar angka di dalam titik terlihat lebih jelas.');
-            }
-            renderPatternCanvas();
-        });
-
-        // 6. Brightness & Contrast
-        els.brightness.addEventListener('input', (e) => {
-            state.brightness = e.target.value;
-            els.brightnessVal.textContent = `${state.brightness}%`;
-            processImageToPattern();
-        });
-        els.contrast.addEventListener('input', (e) => {
-            state.contrast = e.target.value;
-            els.contrastVal.textContent = `${state.contrast}%`;
-            processImageToPattern();
-        });
-        els.btnResetAdjust.addEventListener('click', () => {
-            state.brightness = 0;
-            state.contrast = 10;
-            els.brightness.value = 0;
-            els.contrast.value = 10;
-            els.brightnessVal.textContent = '0%';
-            els.contrastVal.textContent = '10%';
-            processImageToPattern();
-        });
-
-        // 7. Edit Warna Benang & Clear Highlight
-        els.hiddenColorPicker.addEventListener('input', (e) => {
-            if (state.editingColorIdx === null) return;
-            const newHex = e.target.value.toUpperCase();
-            const rgb = hexToRgb(newHex);
-            const target = state.palette[state.editingColorIdx];
-            if (target) {
-                target.hex = newHex;
-                target.r = rgb.r;
-                target.g = rgb.g;
-                target.b = rgb.b;
-                renderPaletteUI();
-                renderPatternCanvas();
-            }
-        });
-
-        els.btnClearHighlight.addEventListener('click', () => {
-            state.highlightedColorIdx = null;
-            renderPaletteUI();
-            renderPatternCanvas();
-        });
-
-        // 8. Tab Mode Tampilan (Pola Karawo vs Gambar Asli)
-        els.tabPattern.addEventListener('click', () => {
-            state.viewMode = 'pattern';
-            els.tabPattern.classList.add('bg-white', 'text-marun-800', 'shadow-sm');
-            els.tabPattern.classList.remove('text-stone-600');
-            els.tabOriginal.classList.remove('bg-white', 'text-marun-800', 'shadow-sm');
-            els.tabOriginal.classList.add('text-stone-600');
-            els.patternWrapper.classList.remove('hidden');
-            els.originalWrapper.classList.add('hidden');
-        });
-
-        els.tabOriginal.addEventListener('click', () => {
-            state.viewMode = 'original';
-            els.tabOriginal.classList.add('bg-white', 'text-marun-800', 'shadow-sm');
-            els.tabOriginal.classList.remove('text-stone-600');
-            els.tabPattern.classList.remove('bg-white', 'text-marun-800', 'shadow-sm');
-            els.tabPattern.classList.add('text-stone-600');
-            els.originalWrapper.classList.remove('hidden');
-            els.patternWrapper.classList.add('hidden');
-        });
-
-        // 9. Kontrol Zoom
-        function updateZoom(newZoom) {
-            state.zoom = Math.max(0.5, Math.min(3.0, Number(newZoom.toFixed(2))));
-            els.zoomLevel.textContent = `${Math.round(state.zoom * 100)}%`;
-            renderPatternCanvas();
+      // Nomor kolom & baris
+      oCtx.fillStyle = '#475569';
+      oCtx.font = 'bold 10px sans-serif';
+      oCtx.textAlign = 'center';
+      for (let c = 0; c < cols; c++) {
+        if ((c + 1) % 5 === 0 || c === 0) {
+          oCtx.fillText(c + 1, margin + c * cell + cell / 2, margin - 10);
         }
-        els.btnZoomIn.addEventListener('click', () => updateZoom(state.zoom + 0.25));
-        els.btnZoomOut.addEventListener('click', () => updateZoom(state.zoom - 0.25));
-        els.btnZoomReset.addEventListener('click', () => updateZoom(1.0));
+      }
+      oCtx.textAlign = 'right';
+      for (let r = 0; r < rows; r++) {
+        if ((r + 1) % 5 === 0 || r === 0) {
+          oCtx.fillText(r + 1, margin - 8, margin + r * cell + cell / 1.5);
+        }
+      }
 
-        // 10. Tooltip Interaktif Saat Hover di atas Kanvas Pola
-        els.patternCanvas.addEventListener('mousemove', (e) => {
-            const rect = els.patternCanvas.getBoundingClientRect();
-            const cellSize = parseFloat(els.patternCanvas.dataset.cellSize || 16);
-            const rulerMargin = parseFloat(els.patternCanvas.dataset.rulerMargin || 0);
+      // Gambar pola utama
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const x = margin + c * cell;
+          const y = margin + r * cell;
+          oCtx.strokeStyle = '#cbd5e1';
+          oCtx.lineWidth = 1;
+          oCtx.strokeRect(x, y, cell, cell);
 
-            const mouseX = e.clientX - rect.left - rulerMargin;
-            const mouseY = e.clientY - rect.top - rulerMargin;
+          const hex = state.gridData[r][c];
+          if (!hex) continue;
+          oCtx.fillStyle = hex;
+          oCtx.strokeStyle = hex;
 
-            const col = Math.floor(mouseX / cellSize);
-            const row = Math.floor(mouseY / cellSize);
+          if (state.shape === 'square') {
+            oCtx.fillRect(x + 1, y + 1, cell - 2, cell - 2);
+          } else if (state.shape === 'circle') {
+            oCtx.beginPath();
+            oCtx.arc(x + cell / 2, y + cell / 2, cell * 0.4, 0, Math.PI * 2);
+            oCtx.fill();
+          } else if (state.shape === 'cross') {
+            const p = 5;
+            oCtx.lineWidth = 4;
+            oCtx.beginPath();
+            oCtx.moveTo(x + p, y + p); oCtx.lineTo(x + cell - p, y + cell - p);
+            oCtx.moveTo(x + cell - p, y + p); oCtx.lineTo(x + p, y + cell - p);
+            oCtx.stroke();
+          }
+        }
+      }
 
-            if (row >= 0 && row < state.gridRows && col >= 0 && col < state.gridCols) {
-                const colorIdx = state.gridIndices[row][col];
-                const color = state.palette[colorIdx];
-                if (color) {
-                    els.tooltipSwatch.style.backgroundColor = color.hex;
-                    els.tooltipText.textContent = `Baris ${row + 1}, Kolom ${col + 1} • Benang #${color.id} (${color.hex})`;
-                    els.hoverTooltip.style.left = `${e.clientX + 14}px`;
-                    els.hoverTooltip.style.top = `${e.clientY + 14}px`;
-                    els.hoverTooltip.classList.remove('hidden');
-                    return;
-                }
-            }
-            els.hoverTooltip.classList.add('hidden');
-        });
+      // Legenda warna benang di bagian bawah
+      const startY = margin * 2 + rows * cell;
+      oCtx.fillStyle = '#0f172a';
+      oCtx.font = 'bold 13px sans-serif';
+      oCtx.textAlign = 'left';
+      oCtx.fillText(`Legenda Benang Karawo (${cols}x${rows} titik):`, margin, startY);
 
-        els.patternCanvas.addEventListener('mouseleave', () => {
-            els.hoverTooltip.classList.add('hidden');
-        });
+      state.palette.forEach((item, idx) => {
+        const colIdx = idx % 4;
+        const rowIdx = Math.floor(idx / 4);
+        const lx = margin + colIdx * ((outCanvas.width - margin * 2) / 4);
+        const ly = startY + 20 + rowIdx * 32;
 
-        // 11. Tombol Unduh PNG
-        els.btnExportPng.addEventListener('click', exportHighResPattern);
+        oCtx.fillStyle = item.hex;
+        oCtx.fillRect(lx, ly, 18, 18);
+        oCtx.strokeStyle = '#94a3b8';
+        oCtx.strokeRect(lx, ly, 18, 18);
 
-        // Muat preset Bunga Karawo saat pertama kali dibuka
-        window.addEventListener('DOMContentLoaded', () => {
-            loadPresetImage('bunga');
-        });
-    </script>
+        oCtx.fillStyle = '#334155';
+        oCtx.font = '11px sans-serif';
+        oCtx.fillText(`${item.hex} (${item.count})`, lx + 24, ly + 13);
+      });
+
+      const a = document.createElement('a');
+      a.href = outCanvas.toDataURL('image/png');
+      a.download = `pola-karawo-cetak-${cols}x${rows}.png`;
+      a.click();
+    });
+
+    // Muat contoh awal saat halaman dibuka
+    loadSample('bunga');
+  </script>
 </body>
 </html>
