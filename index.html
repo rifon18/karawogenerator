@@ -3,383 +3,662 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Karawo Generator - Pola Strimin Presisi</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <title>Karawo Strimin Generator</title>
   <style>
-    body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      background-color: #f1f5f9;
-      color: #1e293b;
-    }
-    canvas {
-      image-rendering: pixelated;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { background: #f1f5f9; color: #1e293b; min-height: 100vh; display: flex; flex-direction: column; }
+    header { background: #ffffff; border-bottom: 1px solid #cbd5e1; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .logo { width: 36px; height: 36px; background: #0f172a; color: #fff; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; }
+    .title h1 { font-size: 17px; font-weight: 700; color: #0f172a; }
+    .title p { font-size: 12px; color: #64748b; }
+    .actions { display: flex; gap: 8px; }
+    button { cursor: pointer; border-radius: 8px; font-weight: 600; font-size: 13px; padding: 8px 14px; transition: 0.15s; border: 1px solid transparent; }
+    .btn-primary { background: #0f172a; color: #fff; }
+    .btn-primary:hover { background: #334155; }
+    .btn-secondary { background: #f8fafc; color: #334155; border-color: #cbd5e1; }
+    .btn-secondary:hover { background: #e2e8f0; }
+
+    main { max-width: 1280px; width: 100%; margin: 20px auto; padding: 0 20px; display: grid; grid-template-columns: 340px 1fr; gap: 20px; flex: 1; }
+    @media (max-width: 860px) { main { grid-template-columns: 1fr; } }
+
+    .sidebar { display: flex; flex-direction: column; gap: 16px; }
+    .card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+    .card h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: #475569; margin-bottom: 12px; font-weight: 700; }
+
+    .upload-box { border: 2px dashed #cbd5e1; border-radius: 10px; padding: 20px 12px; text-align: center; background: #f8fafc; cursor: pointer; display: block; }
+    .upload-box:hover { border-color: #0f172a; background: #f1f5f9; }
+    .upload-box p { font-size: 13px; font-weight: 600; color: #334155; }
+    .upload-box span { font-size: 11px; color: #64748b; display: block; margin-top: 4px; }
+
+    .sample-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
+    .sample-btn { padding: 6px; font-size: 12px; background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; }
+    .sample-btn:hover { background: #e2e8f0; }
+
+    .control-group { margin-bottom: 14px; }
+    .control-group:last-child { margin-bottom: 0; }
+    .label-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; font-weight: 500; }
+    .label-row strong { color: #0f172a; }
+    input[type="range"] { width: 100%; accent-color: #0f172a; cursor: pointer; }
+    .hint { font-size: 11px; color: #64748b; margin-top: 4px; line-height: 1.4; }
+
+    .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 14px; }
+    .mode-btn { padding: 8px; font-size: 12px; background: #fff; border: 1px solid #cbd5e1; color: #475569; }
+    .mode-btn.active { background: #0f172a; color: #fff; border-color: #0f172a; }
+
+    .checkbox-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; padding-top: 10px; border-top: 1px solid #f1f5f9; margin-top: 10px; }
+    .checkbox-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: #0f172a; cursor: pointer; }
+
+    .workspace { display: flex; flex-direction: column; gap: 16px; }
+    .info-bar { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; flex-wrap: wrap; gap: 8px; }
+    .canvas-container { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; flex: 1; display: flex; align-items: center; justify-content: center; overflow: auto; min-height: 480px; }
+    canvas { max-width: 100%; height: auto; border: 1px solid #94a3b8; image-rendering: pixelated; }
+
+    .palette-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+    .swatch-card { display: flex; align-items: center; gap: 8px; padding: 8px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; }
+    .swatch-box { width: 22px; height: 22px; border-radius: 4px; border: 1px solid #94a3b8; flex-shrink: 0; }
+    .hidden { display: none !important; }
   </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body>
 
-  <!-- Header -->
-  <header class="bg-white border-b border-slate-200 sticky top-0 z-10">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-lg bg-slate-900 text-white flex items-center justify-center font-bold text-lg shadow-sm">
-          K
-        </div>
-        <div>
-          <h1 class="font-bold text-slate-900 text-lg leading-tight">Karawo Strimin Generator</h1>
-          <p class="text-xs text-slate-500">Konversi Motif ke Pola Kotak Strimin Presisi</p>
-        </div>
+  <header>
+    <div class="brand">
+      <div class="logo">K</div>
+      <div class="title">
+        <h1>Karawo Strimin Generator</h1>
+        <p>Konversi Gambar ke Pola Kotak Strimin Presisi</p>
       </div>
-      <div class="flex items-center gap-2">
-        <button id="btn-export-svg" class="px-3.5 py-2 text-xs sm:text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition cursor-pointer">
-          Unduh Vektor (SVG)
-        </button>
-        <button id="btn-export-png" class="px-3.5 py-2 text-xs sm:text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg shadow-sm transition cursor-pointer">
-          Unduh Pola Strimin (PNG)
-        </button>
-      </div>
+    </div>
+    <div class="actions">
+      <button type="button" id="btn-export-svg" class="btn-secondary">Unduh Vektor (SVG)</button>
+      <button type="button" id="btn-export-png" class="btn-primary">Unduh Pola Strimin (PNG)</button>
     </div>
   </header>
 
-  <!-- Main Content -->
-  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-    
-    <!-- Panel Kontrol (Kiri) -->
-    <aside class="lg:col-span-4 space-y-4">
-      
-      <!-- 1. Unggah Gambar -->
-      <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
-        <h2 class="font-semibold text-slate-800 text-xs uppercase tracking-wider">1. Unggah Motif / Gambar</h2>
-        
-        <label id="drop-zone" class="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer bg-slate-50 hover:bg-slate-100 hover:border-slate-500 transition">
-          <div class="flex flex-col items-center justify-center text-center px-4">
-            <svg class="w-6 h-6 mb-1.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-            </svg>
-            <p class="text-xs font-semibold text-slate-700">Pilih gambar atau tarik ke sini</p>
-            <p class="text-[11px] text-slate-400 mt-0.5">Mendukung JPG, PNG, WEBP</p>
-          </div>
-          <input id="file-input" type="file" class="hidden" accept="image/*" />
+  <main>
+    <aside class="sidebar">
+      <!-- 1. Unggah -->
+      <div class="card">
+        <h2>1. Sumber Gambar</h2>
+        <label class="upload-box" id="drop-zone">
+          <p>Klik untuk Pilih Gambar</p>
+          <span>atau tarik file ke kotak ini (JPG, PNG)</span>
+          <input type="file" id="file-input" accept="image/*" class="hidden">
         </label>
+        <div class="sample-grid">
+          <button type="button" class="sample-btn" id="smp-mandala">Ornamen</button>
+          <button type="button" class="sample-btn" id="smp-bunga">Bunga</button>
+          <button type="button" class="sample-btn" id="smp-daun">Daun</button>
+        </div>
+      </div>
 
-        <div>
-          <p class="text-[11px] text-slate-500 mb-1.5">Contoh motif siap uji:</p>
-          <div class="grid grid-cols-3 gap-2">
-            <button type="button" onclick="loadSample('mandala')" class="py-1.5 px-2 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition cursor-pointer">Ornamen</button>
-            <button type="button" onclick="loadSample('bunga')" class="py-1.5 px-2 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition cursor-pointer">Bunga</button>
-            <button type="button" onclick="loadSample('daun')" class="py-1.5 px-2 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition cursor-pointer">Sulur Daun</button>
+      <!-- 2. Gaya Pola -->
+      <div class="card">
+        <h2>2. Mode & Deteksi Objek</h2>
+        <div class="mode-grid">
+          <button type="button" id="mode-mono" class="mode-btn active">Strimin Hitam-Putih</button>
+          <button type="button" id="mode-color" class="mode-btn">Multi Warna</button>
+        </div>
+
+        <div id="mono-controls">
+          <div class="control-group">
+            <div class="label-row">
+              <span>Ketebalan / Ketajaman Motif</span>
+              <strong id="val-threshold">145</strong>
+            </div>
+            <input type="range" id="input-threshold" min="20" max="240" value="145">
+            <p class="hint">Geser kanan untuk menebalkan garis, geser kiri untuk membersihkan background.</p>
+          </div>
+          <div class="checkbox-row">
+            <span>Balik Warna (Jika latar gelap)</span>
+            <input type="checkbox" id="toggle-invert">
+          </div>
+        </div>
+
+        <div id="color-controls" class="hidden">
+          <div class="control-group">
+            <div class="label-row">
+              <span>Toleransi Hapus Background</span>
+              <strong id="val-tolerance">40</strong>
+            </div>
+            <input type="range" id="input-tolerance" min="5" max="150" value="40">
+          </div>
+          <div class="control-group">
+            <div class="label-row">
+              <span>Jumlah Warna Benang</span>
+              <strong id="val-colors">5 warna</strong>
+            </div>
+            <input type="range" id="input-colors" min="2" max="12" value="5">
           </div>
         </div>
       </div>
 
-      <!-- 2. Mode Pola & Ketajaman Objek -->
-      <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
-        <h2 class="font-semibold text-slate-800 text-xs uppercase tracking-wider">2. Gaya Pola & Deteksi Objek</h2>
-
-        <!-- Pilihan Mode Warna -->
-        <div>
-          <label class="text-xs font-medium text-slate-600 block mb-1.5">Mode Tampilan Pola</label>
-          <div class="grid grid-cols-2 gap-2">
-            <button type="button" id="mode-mono" class="py-2 px-3 text-xs font-semibold rounded-lg border border-slate-900 bg-slate-900 text-white cursor-pointer">
-              Strimin Hitam-Putih
-            </button>
-            <button type="button" id="mode-color" class="py-2 px-3 text-xs font-semibold rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 cursor-pointer">
-              Multi Warna
-            </button>
+      <!-- 3. Grid Strimin -->
+      <div class="card">
+        <h2>3. Ukuran Kotak Strimin</h2>
+        <div class="control-group">
+          <div class="label-row">
+            <span>Kerapatan Kolom</span>
+            <strong id="val-cols">110 kolom</strong>
           </div>
+          <input type="range" id="input-cols" min="30" max="160" value="110">
         </div>
 
-        <!-- Ambang Ketajaman / Hapus Background -->
-        <div id="mono-controls" class="space-y-3">
-          <div>
-            <div class="flex justify-between text-xs mb-1">
-              <span class="text-slate-600 font-medium">Ketebalan / Ketajaman Motif</span>
-              <span id="val-threshold" class="font-bold text-slate-900">145</span>
-            </div>
-            <input id="input-threshold" type="range" min="30" max="235" value="145" class="w-full accent-slate-900 cursor-pointer">
-            <p class="text-[11px] text-slate-400 mt-1">Geser ke kanan untuk menebalkan garis halus, geser ke kiri untuk membersihkan bayangan latar.</p>
+        <div class="control-group">
+          <div class="label-row">
+            <span>Margin Kosong di Tepi</span>
+            <strong id="val-padding">6 kotak</strong>
           </div>
-
-          <div class="flex items-center justify-between pt-1">
-            <span class="text-xs text-slate-600">Balik Warna (Jika latar gambar gelap)</span>
-            <input type="checkbox" id="toggle-invert" class="w-4 h-4 accent-slate-900 rounded cursor-pointer">
-          </div>
+          <input type="range" id="input-padding" min="0" max="20" value="6">
         </div>
 
-        <!-- Kontrol Multi Warna (Tersembunyi saat mode monokrom) -->
-        <div id="color-controls" class="space-y-3 hidden">
-          <div>
-            <div class="flex justify-between text-xs mb-1">
-              <span class="text-slate-600 font-medium">Toleransi Hapus Background</span>
-              <span id="val-tolerance" class="font-bold text-slate-900">40</span>
-            </div>
-            <input id="input-tolerance" type="range" min="5" max="150" value="40" class="w-full accent-slate-900 cursor-pointer">
-          </div>
-          <div>
-            <div class="flex justify-between text-xs mb-1">
-              <span class="text-slate-600 font-medium">Jumlah Warna Benang</span>
-              <span id="val-colors" class="font-bold text-slate-900">5 warna</span>
-            </div>
-            <input id="input-colors" type="range" min="2" max="12" value="5" class="w-full accent-slate-900 cursor-pointer">
-          </div>
+        <div class="checkbox-row" id="ink-color-row">
+          <span>Warna Benang Sulam</span>
+          <input type="color" id="input-ink-color" value="#262626" style="width:32px; height:26px; border:none; cursor:pointer;">
+        </div>
+
+        <div class="checkbox-row">
+          <span>Garis Kotak Strimin Penuh</span>
+          <input type="checkbox" id="toggle-grid" checked>
         </div>
       </div>
-
-      <!-- 3. Ukuran Grid & Bingkai Strimin -->
-      <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
-        <h2 class="font-semibold text-slate-800 text-xs uppercase tracking-wider">3. Ukuran Grid & Kertas Strimin</h2>
-
-        <!-- Resolusi Grid -->
-        <div>
-          <div class="flex justify-between text-xs mb-1">
-            <span class="text-slate-600 font-medium">Kerapatan Kotak (Kolom)</span>
-            <span id="val-cols" class="font-bold text-slate-900">110 kolom</span>
-          </div>
-          <input id="input-cols" type="range" min="30" max="160" value="110" class="w-full accent-slate-900 cursor-pointer">
-          <p class="text-[11px] text-slate-400 mt-0.5">Semakin besar angka, semakin detail lekukan motif.</p>
-        </div>
-
-        <!-- Margin Kosong di Sekeliling Objek -->
-        <div>
-          <div class="flex justify-between text-xs mb-1">
-            <span class="text-slate-600 font-medium">Margin Kotak Kosong di Tepi</span>
-            <span id="val-padding" class="font-bold text-slate-900">6 kotak</span>
-          </div>
-          <input id="input-padding" type="range" min="0" max="20" value="6" class="w-full accent-slate-900 cursor-pointer">
-        </div>
-
-        <!-- Warna Benang Utama (Saat Mode Monokrom) -->
-        <div id="ink-color-row" class="flex items-center justify-between pt-2 border-t border-slate-100">
-          <span class="text-xs font-medium text-slate-700">Warna Titik Sulaman</span>
-          <div class="flex items-center gap-2">
-            <input type="color" id="input-ink-color" value="#262626" class="w-7 h-7 rounded cursor-pointer border border-slate-300">
-            <span id="val-ink-hex" class="text-xs font-mono text-slate-600">#262626</span>
-          </div>
-        </div>
-
-        <!-- Garis Kotak Strimin -->
-        <div class="flex items-center justify-between pt-2 border-t border-slate-100">
-          <span class="text-xs font-medium text-slate-700">Garis Kotak Strimin Penuh</span>
-          <input type="checkbox" id="toggle-grid" class="w-4 h-4 accent-slate-900 rounded cursor-pointer" checked>
-        </div>
-      </div>
-
     </aside>
 
-    <!-- Area Kanvas Hasil (Kanan) -->
-    <section class="lg:col-span-8 flex flex-col gap-4">
-      
-      <!-- Info Bar -->
-      <div class="bg-white px-5 py-3 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-2 text-xs">
-        <div class="flex items-center gap-5">
-          <span>Ukuran Kertas Strimin: <strong id="info-dim" class="text-slate-900">0 × 0</strong> kotak</span>
-          <span>Jumlah Titik Motif: <strong id="info-stitches" class="text-slate-900">0</strong> titik</span>
+    <section class="workspace">
+      <div class="info-bar">
+        <div>
+          Ukuran Strimin: <strong id="info-dim">0 × 0</strong> kotak &nbsp;|&nbsp;
+          Jumlah Titik Motif: <strong id="info-stitches">0</strong> titik
         </div>
-        <span class="text-slate-500">Siap cetak & hitung benang</span>
+        <span id="status-text" style="color:#64748b;">Siap digunakan</span>
       </div>
 
-      <!-- Kanvas Strimin -->
-      <div class="bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-sm flex-1 flex items-center justify-center min-h-[500px] overflow-auto">
-        <canvas id="pattern-canvas" class="max-w-full h-auto border border-slate-400 shadow-sm"></canvas>
+      <div class="canvas-container">
+        <canvas id="pattern-canvas"></canvas>
       </div>
 
-      <!-- Palet Benang (Muncul saat mode multi warna) -->
-      <div id="palette-panel" class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hidden">
-        <h3 class="font-semibold text-slate-800 text-xs uppercase tracking-wider mb-3">Rincian Warna Benang</h3>
-        <div id="palette-container" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-2.5"></div>
+      <div class="card hidden" id="palette-panel">
+        <h2>Rincian Warna Benang</h2>
+        <div class="palette-grid" id="palette-container"></div>
       </div>
-
     </section>
   </main>
 
   <script>
-    const state = {
-      sourceImage: null,
-      mode: 'mono', // 'mono' (seperti gambar contoh) atau 'color'
-      cols: 110,
-      padding: 6,
-      threshold: 145,
-      invert: false,
-      inkColor: '#262626',
-      tolerance: 40,
-      numColors: 5,
-      showGrid: true,
-      gridData: [], // Array 2D berisi hex color atau null (kotak strimin kosong)
-      palette: []
-    };
+    window.addEventListener('DOMContentLoaded', function() {
+      const state = {
+        sourceImage: null,
+        mode: 'mono',
+        cols: 110,
+        padding: 6,
+        threshold: 145,
+        invert: false,
+        inkColor: '#262626',
+        tolerance: 40,
+        numColors: 5,
+        showGrid: true,
+        gridData: [],
+        palette: []
+      };
 
-    const canvas = document.getElementById('pattern-canvas');
-    const ctx = canvas.getContext('2d');
-    const fileInput = document.getElementById('file-input');
-    const dropZone = document.getElementById('drop-zone');
+      const canvas = document.getElementById('pattern-canvas');
+      const ctx = canvas.getContext('2d');
+      const statusText = document.getElementById('status-text');
 
-    // Switch Mode Monokrom vs Warna
-    document.getElementById('mode-mono').addEventListener('click', () => {
-      state.mode = 'mono';
-      document.getElementById('mode-mono').className = 'py-2 px-3 text-xs font-semibold rounded-lg border border-slate-900 bg-slate-900 text-white cursor-pointer';
-      document.getElementById('mode-color').className = 'py-2 px-3 text-xs font-semibold rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 cursor-pointer';
-      document.getElementById('mono-controls').classList.remove('hidden');
-      document.getElementById('ink-color-row').classList.remove('hidden');
-      document.getElementById('color-controls').classList.add('hidden');
-      document.getElementById('palette-panel').classList.add('hidden');
-      processImage();
-    });
+      // Tombol Contoh Motif
+      document.getElementById('smp-mandala').onclick = () => loadSample('mandala');
+      document.getElementById('smp-bunga').onclick = () => loadSample('bunga');
+      document.getElementById('smp-daun').onclick = () => loadSample('daun');
 
-    document.getElementById('mode-color').addEventListener('click', () => {
-      state.mode = 'color';
-      document.getElementById('mode-color').className = 'py-2 px-3 text-xs font-semibold rounded-lg border border-slate-900 bg-slate-900 text-white cursor-pointer';
-      document.getElementById('mode-mono').className = 'py-2 px-3 text-xs font-semibold rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 cursor-pointer';
-      document.getElementById('mono-controls').classList.add('hidden');
-      document.getElementById('ink-color-row').classList.add('hidden');
-      document.getElementById('color-controls').classList.remove('hidden');
-      document.getElementById('palette-panel').classList.remove('hidden');
-      processImage();
-    });
+      // Switch Mode
+      document.getElementById('mode-mono').onclick = () => {
+        state.mode = 'mono';
+        document.getElementById('mode-mono').classList.add('active');
+        document.getElementById('mode-color').classList.remove('active');
+        document.getElementById('mono-controls').classList.remove('hidden');
+        document.getElementById('ink-color-row').classList.remove('hidden');
+        document.getElementById('color-controls').classList.add('hidden');
+        document.getElementById('palette-panel').classList.add('hidden');
+        processImage();
+      };
 
-    // Event Listeners Sliders & Inputs
-    document.getElementById('input-threshold').addEventListener('input', (e) => {
-      state.threshold = parseInt(e.target.value);
-      document.getElementById('val-threshold').textContent = state.threshold;
-      processImage();
-    });
+      document.getElementById('mode-color').onclick = () => {
+        state.mode = 'color';
+        document.getElementById('mode-color').classList.add('active');
+        document.getElementById('mode-mono').classList.remove('active');
+        document.getElementById('mono-controls').classList.add('hidden');
+        document.getElementById('ink-color-row').classList.add('hidden');
+        document.getElementById('color-controls').classList.remove('hidden');
+        document.getElementById('palette-panel').classList.remove('hidden');
+        processImage();
+      };
 
-    document.getElementById('toggle-invert').addEventListener('change', (e) => {
-      state.invert = e.target.checked;
-      processImage();
-    });
+      // Kontrol Sliders
+      document.getElementById('input-threshold').oninput = (e) => {
+        state.threshold = parseInt(e.target.value, 10);
+        document.getElementById('val-threshold').textContent = state.threshold;
+        processImage();
+      };
 
-    document.getElementById('input-cols').addEventListener('input', (e) => {
-      state.cols = parseInt(e.target.value);
-      document.getElementById('val-cols').textContent = `${state.cols} kolom`;
-      processImage();
-    });
+      document.getElementById('toggle-invert').onchange = (e) => {
+        state.invert = e.target.checked;
+        processImage();
+      };
 
-    document.getElementById('input-padding').addEventListener('input', (e) => {
-      state.padding = parseInt(e.target.value);
-      document.getElementById('val-padding').textContent = `${state.padding} kotak`;
-      processImage();
-    });
+      document.getElementById('input-cols').oninput = (e) => {
+        state.cols = parseInt(e.target.value, 10);
+        document.getElementById('val-cols').textContent = state.cols + ' kolom';
+        processImage();
+      };
 
-    document.getElementById('input-ink-color').addEventListener('input', (e) => {
-      state.inkColor = e.target.value.toUpperCase();
-      document.getElementById('val-ink-hex').textContent = state.inkColor;
-      processImage();
-    });
+      document.getElementById('input-padding').oninput = (e) => {
+        state.padding = parseInt(e.target.value, 10);
+        document.getElementById('val-padding').textContent = state.padding + ' kotak';
+        processImage();
+      };
 
-    document.getElementById('input-tolerance').addEventListener('input', (e) => {
-      state.tolerance = parseInt(e.target.value);
-      document.getElementById('val-tolerance').textContent = state.tolerance;
-      processImage();
-    });
+      document.getElementById('input-ink-color').oninput = (e) => {
+        state.inkColor = e.target.value.toUpperCase();
+        processImage();
+      };
 
-    document.getElementById('input-colors').addEventListener('input', (e) => {
-      state.numColors = parseInt(e.target.value);
-      document.getElementById('val-colors').textContent = `${state.numColors} warna`;
-      processImage();
-    });
+      document.getElementById('input-tolerance').oninput = (e) => {
+        state.tolerance = parseInt(e.target.value, 10);
+        document.getElementById('val-tolerance').textContent = state.tolerance;
+        processImage();
+      };
 
-    document.getElementById('toggle-grid').addEventListener('change', (e) => {
-      state.showGrid = e.target.checked;
-      renderPattern();
-    });
+      document.getElementById('input-colors').oninput = (e) => {
+        state.numColors = parseInt(e.target.value, 10);
+        document.getElementById('val-colors').textContent = state.numColors + ' warna';
+        processImage();
+      };
 
-    // Upload File
-    fileInput.addEventListener('change', (e) => {
-      if (e.target.files && e.target.files[0]) loadFile(e.target.files[0]);
-    });
+      document.getElementById('toggle-grid').onchange = (e) => {
+        state.showGrid = e.target.checked;
+        renderPattern();
+      };
 
-    dropZone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      dropZone.classList.add('border-slate-700', 'bg-slate-100');
-    });
-    dropZone.addEventListener('dragleave', () => {
-      dropZone.classList.remove('border-slate-700', 'bg-slate-100');
-    });
-    dropZone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dropZone.classList.remove('border-slate-700', 'bg-slate-100');
-      if (e.dataTransfer.files && e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]);
-    });
+      // Upload File
+      const fileInput = document.getElementById('file-input');
+      const dropZone = document.getElementById('drop-zone');
 
-    function loadFile(file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
+      fileInput.onchange = (e) => {
+        if (e.target.files && e.target.files[0]) handleFile(e.target.files[0]);
+      };
+
+      dropZone.ondragover = (e) => { e.preventDefault(); dropZone.style.borderColor = '#0f172a'; };
+      dropZone.ondragleave = () => { dropZone.style.borderColor = '#cbd5e1'; };
+      dropZone.ondrop = (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = '#cbd5e1';
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+      };
+
+      function handleFile(file) {
+        statusText.textContent = 'Memuat gambar...';
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const img = new Image();
+          img.onload = () => {
+            state.sourceImage = img;
+            processImage();
+            statusText.textContent = 'Berhasil dikonversi';
+          };
+          img.onerror = () => {
+            statusText.textContent = 'Gagal membaca gambar';
+            alert('Format gambar tidak didukung atau file rusak.');
+          };
+          img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+
+      function loadSample(type) {
+        const c = document.createElement('canvas');
+        c.width = 400; c.height = 400;
+        const x = c.getContext('2d');
+        x.fillStyle = '#ffffff';
+        x.fillRect(0, 0, 400, 400);
+        x.fillStyle = '#000000';
+        x.strokeStyle = '#000000';
+
+        if (type === 'mandala') {
+          x.translate(200, 200);
+          for (let i = 0; i < 4; i++) {
+            x.rotate(Math.PI / 2);
+            x.beginPath();
+            x.moveTo(0, -175);
+            x.quadraticCurveTo(22, -135, 0, -105);
+            x.quadraticCurveTo(-22, -135, 0, -175);
+            x.fill();
+
+            [-1, 1].forEach(dir => {
+              x.beginPath();
+              x.moveTo(dir * 12, -115);
+              x.quadraticCurveTo(dir * 55, -145, dir * 48, -95);
+              x.quadraticCurveTo(dir * 35, -80, dir * 12, -95);
+              x.fill();
+
+              x.beginPath();
+              x.moveTo(dir * 18, -85);
+              x.quadraticCurveTo(dir * 85, -110, dir * 75, -65);
+              x.quadraticCurveTo(dir * 50, -55, dir * 18, -70);
+              x.fill();
+
+              x.lineWidth = 9;
+              x.beginPath();
+              x.arc(dir * 45, -35, 22, 0, Math.PI * 1.4);
+              x.stroke();
+            });
+          }
+          x.beginPath(); x.arc(0, 0, 24, 0, Math.PI * 2); x.fill();
+          x.fillStyle = '#ffffff';
+          x.beginPath(); x.arc(0, 0, 10, 0, Math.PI * 2); x.fill();
+        } else if (type === 'bunga') {
+          x.translate(200, 200);
+          for (let i = 0; i < 8; i++) {
+            x.rotate(Math.PI / 4);
+            x.beginPath(); x.ellipse(0, -90, 24, 65, 0, 0, Math.PI * 2); x.fill();
+          }
+          x.fillStyle = '#ffffff';
+          x.beginPath(); x.arc(0, 0, 35, 0, Math.PI * 2); x.fill();
+          x.fillStyle = '#000000';
+          x.beginPath(); x.arc(0, 0, 18, 0, Math.PI * 2); x.fill();
+        } else {
+          x.lineWidth = 14;
+          x.beginPath(); x.moveTo(70, 340); x.bezierCurveTo(120, 220, 280, 180, 330, 60); x.stroke();
+          [[130, 260, -0.7], [185, 210, -0.7], [240, 155, -0.7], [165, 285, 0.8], [220, 235, 0.8], [275, 180, 0.8]].forEach(([px, py, rot]) => {
+            x.beginPath(); x.ellipse(px, py, 42, 18, rot, 0, Math.PI * 2); x.fill();
+          });
+        }
+
         const img = new Image();
         img.onload = () => {
           state.sourceImage = img;
           processImage();
         };
-        img.src = event.target.result;
+        img.src = c.toDataURL();
+      }
+
+      function processImage() {
+        if (!state.sourceImage) return;
+        const img = state.sourceImage;
+        const maxWork = 400;
+        const scale = Math.min(1, maxWork / Math.max(img.width, img.height));
+        const w = Math.max(1, Math.round(img.width * scale));
+        const h = Math.max(1, Math.round(img.height * scale));
+
+        const workCanvas = document.createElement('canvas');
+        workCanvas.width = w;
+        workCanvas.height = h;
+        const wCtx = workCanvas.getContext('2d');
+        wCtx.fillStyle = '#ffffff';
+        wCtx.fillRect(0, 0, w, h);
+        wCtx.drawImage(img, 0, 0, w, h);
+
+        const imgData = wCtx.getImageData(0, 0, w, h);
+        const data = imgData.data;
+
+        let minX = w, minY = h, maxX = 0, maxY = 0, found = false;
+
+        if (state.mode === 'mono') {
+          for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+              const i = (y * w + x) * 4;
+              const lum = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
+              const isInk = state.invert ? (lum > state.threshold) : (lum < state.threshold);
+              if (isInk) {
+                found = true;
+                if (x < minX) minX = x;
+                if (x > maxX) maxX = x;
+                if (y < minY) minY = y;
+                if (y > maxY) maxY = y;
+              }
+            }
+          }
+        } else {
+          const visited = new Uint8Array(w * h);
+          const queue = [];
+          const tolSq = state.tolerance * state.tolerance * 3;
+          const distSq = (i1, i2) => (data[i1]-data[i2])**2 + (data[i1+1]-data[i2+1])**2 + (data[i1+2]-data[i2+2])**2;
+
+          for (let x = 0; x < w; x++) { queue.push([x, 0, 0]); queue.push([x, h-1, (h-1)*w+x]); }
+          for (let y = 0; y < h; y++) { queue.push([0, y, y*w]); queue.push([w-1, y, y*w+(w-1)]); }
+
+          let head = 0;
+          while (head < queue.length) {
+            const [cx, cy, ref] = queue[head++];
+            const pos = cy * w + cx;
+            if (visited[pos]) continue;
+            visited[pos] = 1;
+            if (distSq(pos * 4, ref * 4) <= tolSq) {
+              data[pos * 4 + 3] = 0;
+              if (cx > 0 && !visited[pos-1]) queue.push([cx-1, cy, ref]);
+              if (cx < w-1 && !visited[pos+1]) queue.push([cx+1, cy, ref]);
+              if (cy > 0 && !visited[pos-w]) queue.push([cx, cy-1, ref]);
+              if (cy < h-1 && !visited[pos+w]) queue.push([cx, cy+1, ref]);
+            }
+          }
+          wCtx.putImageData(imgData, 0, 0);
+
+          for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+              if (data[(y * w + x) * 4 + 3] > 128) {
+                found = true;
+                if (x < minX) minX = x;
+                if (x > maxX) maxX = x;
+                if (y < minY) minY = y;
+                if (y > maxY) maxY = y;
+              }
+            }
+          }
+        }
+
+        if (!found) { minX = 0; minY = 0; maxX = w - 1; maxY = h - 1; }
+
+        const cropW = Math.max(1, maxX - minX + 1);
+        const cropH = Math.max(1, maxY - minY + 1);
+        const pad = state.padding;
+        const objCols = Math.max(10, state.cols - pad * 2);
+        const objRows = Math.max(10, Math.round(objCols * (cropH / cropW)));
+
+        const totalCols = objCols + pad * 2;
+        const totalRows = objRows + pad * 2;
+
+        const sampleCanvas = document.createElement('canvas');
+        sampleCanvas.width = objCols;
+        sampleCanvas.height = objRows;
+        const sCtx = sampleCanvas.getContext('2d');
+        sCtx.drawImage(workCanvas, minX, minY, cropW, cropH, 0, 0, objCols, objRows);
+        const sData = sCtx.getImageData(0, 0, objCols, objRows).data;
+
+        const fullGrid = [];
+        for (let r = 0; r < totalRows; r++) fullGrid.push(new Array(totalCols).fill(null));
+
+        let stitchCount = 0;
+        const colorCounts = {};
+
+        if (state.mode === 'mono') {
+          for (let r = 0; r < objRows; r++) {
+            for (let c = 0; c < objCols; c++) {
+              const i = (r * objCols + c) * 4;
+              const lum = 0.299 * sData[i] + 0.587 * sData[i+1] + 0.114 * sData[i+2];
+              const isInk = state.invert ? (lum > state.threshold) : (lum < state.threshold);
+              if (isInk) {
+                fullGrid[r + pad][c + pad] = state.inkColor;
+                stitchCount++;
+              }
+            }
+          }
+          state.palette = [{ hex: state.inkColor, count: stitchCount }];
+        } else {
+          const solidPixels = [];
+          for (let i = 0; i < sData.length; i += 4) {
+            if (sData[i+3] > 128) solidPixels.push([sData[i], sData[i+1], sData[i+2]]);
+          }
+          const centroids = kMeansColors(solidPixels, state.numColors);
+          for (let r = 0; r < objRows; r++) {
+            for (let c = 0; c < objCols; c++) {
+              const i = (r * objCols + c) * 4;
+              if (sData[i+3] > 128) {
+                const nearest = findNearestColor([sData[i], sData[i+1], sData[i+2]], centroids);
+                const hex = rgbToHex(nearest[0], nearest[1], nearest[2]);
+                fullGrid[r + pad][c + pad] = hex;
+                colorCounts[hex] = (colorCounts[hex] || 0) + 1;
+                stitchCount++;
+              }
+            }
+          }
+          state.palette = Object.entries(colorCounts).map(([hex, count]) => ({ hex, count })).sort((a, b) => b.count - a.count);
+          renderPalette();
+        }
+
+        state.gridData = fullGrid;
+        document.getElementById('info-dim').textContent = totalCols + ' × ' + totalRows;
+        document.getElementById('info-stitches').textContent = stitchCount;
+        renderPattern();
+      }
+
+      function kMeansColors(pixels, k) {
+        if (pixels.length === 0) return [[38, 38, 38]];
+        if (pixels.length <= k) return pixels;
+        let centroids = [];
+        const step = Math.floor(pixels.length / k);
+        for (let i = 0; i < k; i++) centroids.push([...pixels[i * step]]);
+
+        for (let iter = 0; iter < 8; iter++) {
+          const clusters = Array.from({ length: k }, () => []);
+          for (const p of pixels) {
+            let minD = Infinity, best = 0;
+            for (let i = 0; i < k; i++) {
+              const d = (p[0]-centroids[i][0])**2 + (p[1]-centroids[i][1])**2 + (p[2]-centroids[i][2])**2;
+              if (d < minD) { minD = d; best = i; }
+            }
+            clusters[best].push(p);
+          }
+          for (let i = 0; i < k; i++) {
+            if (clusters[i].length > 0) {
+              let r = 0, g = 0, b = 0;
+              for (const p of clusters[i]) { r += p[0]; g += p[1]; b += p[2]; }
+              centroids[i] = [Math.round(r/clusters[i].length), Math.round(g/clusters[i].length), Math.round(b/clusters[i].length)];
+            }
+          }
+        }
+        return centroids;
+      }
+
+      function findNearestColor(rgb, centroids) {
+        let minD = Infinity, best = centroids[0];
+        for (const c of centroids) {
+          const d = (rgb[0]-c[0])**2 + (rgb[1]-c[1])**2 + (rgb[2]-c[2])**2;
+          if (d < minD) { minD = d; best = c; }
+        }
+        return best;
+      }
+
+      function rgbToHex(r, g, b) {
+        return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase();
+      }
+
+      function renderPattern() {
+        const rows = state.gridData.length;
+        if (rows === 0) return;
+        const cols = state.gridData[0].length;
+        const cellSize = Math.max(7, Math.min(16, Math.floor(820 / cols)));
+
+        canvas.width = cols * cellSize;
+        canvas.height = rows * cellSize;
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const hex = state.gridData[r][c];
+            if (hex) {
+              ctx.fillStyle = hex;
+              ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
+            }
+          }
+        }
+
+        if (state.showGrid) {
+          ctx.strokeStyle = 'rgba(148, 163, 184, 0.55)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          for (let c = 0; c <= cols; c++) {
+            const x = c * cellSize + 0.5;
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, canvas.height);
+          }
+          for (let r = 0; r <= rows; r++) {
+            const y = r * cellSize + 0.5;
+            ctx.moveTo(0, y);
+            ctx.lineTo(canvas.width, y);
+          }
+          ctx.stroke();
+        }
+      }
+
+      function renderPalette() {
+        const container = document.getElementById('palette-container');
+        container.innerHTML = '';
+        state.palette.forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'swatch-card';
+          div.innerHTML = `
+            <span class="swatch-box" style="background:${item.hex}"></span>
+            <div>
+              <p style="font-size:12px;font-weight:700;">${item.hex}</p>
+              <p style="font-size:11px;color:#64748b;">${item.count} kotak</p>
+            </div>
+          `;
+          container.appendChild(div);
+        });
+      }
+
+      document.getElementById('btn-export-svg').onclick = () => {
+        const rows = state.gridData.length;
+        if (rows === 0) return;
+        const cols = state.gridData[0].length;
+        const size = 10;
+        let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${cols * size} ${rows * size}" width="${cols * size}" height="${rows * size}">`;
+        svg += `<rect width="100%" height="100%" fill="#ffffff"/>`;
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const hex = state.gridData[r][c];
+            if (hex) svg += `<rect x="${c * size}" y="${r * size}" width="${size}" height="${size}" fill="${hex}"/>`;
+          }
+        }
+        if (state.showGrid) {
+          svg += `<g stroke="#94a3b8" stroke-width="0.5" opacity="0.6">`;
+          for (let c = 0; c <= cols; c++) svg += `<line x1="${c * size}" y1="0" x2="${c * size}" y2="${rows * size}"/>`;
+          for (let r = 0; r <= rows; r++) svg += `<line x1="0" y1="${r * size}" x2="${cols * size}" y2="${r * size}"/>`;
+          svg += `</g>`;
+        }
+        svg += `</svg>`;
+        const blob = new Blob([svg], { type: 'image/svg+xml' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `pola-strimin-karawo-${cols}x${rows}.svg`;
+        a.click();
+        URL.revokeObjectURL(url);
       };
-      reader.readAsDataURL(file);
-    }
 
-    // Contoh Motif Simetris ala Karawo
-    function loadSample(type) {
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = 400;
-      tempCanvas.height = 400;
-      const tCtx = tempCanvas.getContext('2d');
+      document.getElementById('btn-export-png').onclick = () => {
+        if (state.gridData.length === 0) return;
+        const a = document.createElement('a');
+        a.href = canvas.toDataURL('image/png');
+        a.download = `pola-strimin-karawo-${state.gridData[0].length}x${state.gridData.length}.png`;
+        a.click();
+      };
 
-      tCtx.fillStyle = '#ffffff';
-      tCtx.fillRect(0, 0, 400, 400);
-      tCtx.fillStyle = '#000000';
-      tCtx.strokeStyle = '#000000';
-
-      if (type === 'mandala') {
-        // Motif Ornamen Simetris 4 Arah
-        tCtx.translate(200, 200);
-        for (let i = 0; i < 4; i++) {
-          tCtx.rotate(Math.PI / 2);
-          // Puncak mahkota
-          tCtx.beginPath();
-          tCtx.moveTo(0, -175);
-          tCtx.quadraticCurveTo(22, -135, 0, -105);
-          tCtx.quadraticCurveTo(-22, -135, 0, -175);
-          tCtx.fill();
-
-          // Kelopak samping kiri & kanan
-          [-1, 1].forEach(dir => {
-            tCtx.beginPath();
-            tCtx.moveTo(dir * 12, -115);
-            tCtx.quadraticCurveTo(dir * 55, -145, dir * 48, -95);
-            tCtx.quadraticCurveTo(dir * 35, -80, dir * 12, -95);
-            tCtx.fill();
-
-            tCtx.beginPath();
-            tCtx.moveTo(dir * 18, -85);
-            tCtx.quadraticCurveTo(dir * 85, -110, dir * 75, -65);
-            tCtx.quadraticCurveTo(dir * 50, -55, dir * 18, -70);
-            tCtx.fill();
-
-            // Sulur spiral dalam
-            tCtx.lineWidth = 9;
-            tCtx.beginPath();
-            tCtx.arc(dir * 45, -35, 22, 0, Math.PI * 1.4);
-            tCtx.stroke();
-          });
-        }
-        // Pusat bunga
-        tCtx.beginPath();
-        tCtx.arc(0, 0, 24, 0, Math.PI * 2);
-        tCtx.fill();
-        tCtx.fillStyle = '#ffffff';
-        tCtx.beginPath();
-        tCtx.arc(0, 0, 10, 0, Math.PI * 2);
-        tCtx.fill();
-      } else if (type === 'bunga') {
-        tCtx.translate(200, 200);
-        for (let i = 0; i < 8; i++) {
-          tCtx.rotate(Math.PI / 4);
-          tCtx.beginPath();
-          tCtx.ellipse(0, -90, 24, 65, 0, 0, Math.PI * 2);
-          tCtx.fill();
-        }
-        tCtx.fillStyle = '#ffffff';
-        tCtx.beginPath();
-        tCtx.arc(0, 0, 35, 0, Math.PI * 2);
-        tCtx.fill();
-        tCtx.fillStyle = '#000000';
-        tCtx.beginPath();
-        tCtx.arc(0, 0, 18, 0, Math.PI *
+      // Jalankan contoh awal
+      loadSample('mandala');
+    });
+  </script>
+</body>
+</html>
