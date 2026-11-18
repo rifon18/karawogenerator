@@ -94,8 +94,8 @@
     .btn-primary { background: #0f172a; color: #fff; }
     .btn-secondary { background: #f8fafc; color: #334155; border-color: #cbd5e1; }
 
-    .canvas-container { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; display: flex; align-items: center; justify-content: center; overflow: auto; min-height: 400px; -webkit-overflow-scrolling: touch; }
-    canvas { max-width: 100%; height: auto; border: 1px solid #94a3b8; image-rendering: pixelated; image-rendering: crisp-edges; }
+    .canvas-container { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; display: flex; align-items: center; justify-content: center; overflow: auto; min-height: 400px; -webkit-overflow-scrolling: touch; position: relative; }
+    canvas { max-width: 100%; height: auto; border: 1px solid #94a3b8; image-rendering: pixelated; image-rendering: crisp-edges; cursor: crosshair; }
 
     .palette-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
     .swatch-card { position: relative; display: flex; align-items: center; gap: 8px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc; cursor: pointer; transition: 0.15s; overflow: hidden; }
@@ -285,13 +285,11 @@
       var authError = document.getElementById('auth-error-msg');
 
       function cekIzinAkses() {
-        // Jika wajibAkses dimatikan (false), langsung izinkan akses
         if (!ACCESS_CONFIG.wajibAkses) {
           authOverlay.classList.add('hidden');
           return;
         }
 
-        // Cek apakah perangkat pengguna sudah pernah memasukkan kode yang valid
         var savedCode = '';
         try { savedCode = localStorage.getItem(ACCESS_CONFIG.storageKey) || ''; } catch (e) {}
 
@@ -323,7 +321,6 @@
         if (e.key === 'Enter') prosesLoginAkses();
       });
 
-      // Jalankan pengecekan akses saat halaman pertama kali dibuka
       cekIzinAkses();
 
       /* ========================================================================
@@ -351,7 +348,8 @@
         textOnly: false,
         counter: 0,
         grid: [],
-        palette: []
+        palette: [],
+        lastCellSize: 14 // Disimpan untuk kalkulasi klik piksel manual
       };
 
       var canvas = document.getElementById('canvas');
@@ -387,7 +385,6 @@
       el('text-color').oninput = function(e) { state.textColor = e.target.value.toUpperCase(); update(); };
       el('text-only').onchange = function(e) { state.textOnly = e.target.checked; update(); };
 
-      // Pengaturan Mode Warna (1 Warna vs Multi Warna)
       el('mode-mono').onclick = function() {
         state.mode = 'mono';
         el('mode-mono').className = 'mode-btn active';
@@ -443,7 +440,46 @@
       el('input-ink').onchange = function(e) { setInk(e.target.value); };
 
       /* ========================================================================
-         3. PENGELOLAAN UNGGAH BERKAS (DRAG & DROP / SENTUH)
+         3. FITUR KLIK PIKSEL MANUAL PADA KANVAS UTAMA
+         ======================================================================== */
+      canvas.addEventListener('click', function(e) {
+        var rows = state.grid.length;
+        if (rows === 0) return;
+        var cols = state.grid[0].length;
+        
+        var rect = canvas.getBoundingClientRect();
+        // Skala koordinat klik sesuai resolusi asli kanvas
+        var scaleX = canvas.width / rect.width;
+        var scaleY = (rows * state.lastCellSize) / rect.height; // Batas area grid (tidak termasuk footer watermark)
+        
+        var clickX = (e.clientX - rect.left) * scaleX;
+        var clickY = (e.clientY - rect.top) * scaleY;
+        
+        var cIdx = Math.floor(clickX / state.lastCellSize);
+        var rIdx = Math.floor(clickY / state.lastCellSize);
+        
+        if (rIdx >= 0 && rIdx < rows && cIdx >= 0 && cIdx < cols) {
+          var currentColor = state.grid[rIdx][cIdx] || '#FFFFFF';
+          
+          // Buat elemen input color sementara untuk memilih warna baru secara kustom
+          var colorPicker = document.createElement('input');
+          colorPicker.type = 'color';
+          colorPicker.value = currentColor === '#FFFFFF' ? '#262626' : currentColor;
+          
+          colorPicker.onchange = function(ev) {
+            var newColor = ev.target.value.toUpperCase();
+            state.grid[rIdx][cIdx] = newColor;
+            rebuildPaletteFromGrid();
+            render();
+          };
+          
+          // Picu klik pemilih warna secara otomatis
+          colorPicker.click();
+        }
+      });
+
+      /* ========================================================================
+         4. PENGELOLAAN UNGGAH BERKAS (DRAG & DROP)
          ======================================================================== */
       var dropZone = el('drop-zone');
       var fileInput = el('file-input');
@@ -506,7 +542,7 @@
       }
 
       /* ========================================================================
-         4. FILTER KARTUN 2D & SOBEL EDGE DETECTION
+         5. FILTER KARTUN 2D & SOBEL EDGE DETECTION
          ======================================================================== */
       function apply2DCartoonFilter(sourceC, density) {
         var sc = Math.min(1, density / Math.max(sourceC.width, sourceC.height));
@@ -580,7 +616,7 @@
       }
 
       /* ========================================================================
-         5. GENERATOR MOTIF BUNGA ACAK
+         6. GENERATOR MOTIF BUNGA ACAK
          ======================================================================== */
       function makeRandomFlowerMotif() {
         var s = state.counter++;
@@ -743,7 +779,7 @@
       }
 
       /* ========================================================================
-         6. PEMBARUAN PALET WARNA & STATISTIK TITIK STRIMIN
+         7. PALET WARNA & STATISTIK TITIK STRIMIN
          ======================================================================== */
       function rebuildPaletteFromGrid() {
         var counts = {};
@@ -774,7 +810,7 @@
       }
 
       /* ========================================================================
-         7. PEMROSESAN UTAMA GRID PIKSEL GAMBAR
+         8. PEMROSESAN UTAMA GRID PIKSEL GAMBAR
          ======================================================================== */
       function update() {
         var pad = state.pad;
@@ -970,7 +1006,7 @@
       }
 
       /* ========================================================================
-         8. RENDER KANVAS, WATERMARK & GARIS STRIMIN (TANPA PENGHITUNG MODE WARNA)
+         9. RENDER KANVAS, WATERMARK & GARIS STRIMIN
          ======================================================================== */
       function drawPatternWithWatermark(targetCanvas, targetCtx, cellSize, isTransparentExport) {
         var rows = state.grid.length;
@@ -1017,7 +1053,7 @@
           targetCtx.stroke();
         }
 
-        // Render Area Footer & Watermark Proporsional (Hanya Info Dimensi Grid)
+        // Render Area Footer & Watermark Proporsional
         if (!isTransparentExport) {
           targetCtx.fillStyle = '#f8fafc';
           targetCtx.fillRect(0, gridH, gridW, footerH);
@@ -1045,11 +1081,12 @@
         if(rows === 0) return;
         var cols = state.grid[0].length;
         var size = Math.max(7, Math.min(16, Math.floor(750 / cols)));
+        state.lastCellSize = size; // Simpan ukuran sel aktual untuk akurasi klik manual
         drawPatternWithWatermark(canvas, ctx, size, false);
       }
 
       /* ========================================================================
-         9. KARTU PALET WARNA INTERAKTIF
+         10. KARTU PALET WARNA INTERAKTIF
          ======================================================================== */
       function renderPalette() {
         var grid = el('palette-grid');
@@ -1096,7 +1133,7 @@
       }
 
       /* ========================================================================
-         10. EKSPOR BERKAS (SVG & PNG)
+         11. EKSPOR BERKAS (SVG & PNG)
          ======================================================================== */
       el('btn-svg').onclick = function() {
         if(state.grid.length === 0) return;
