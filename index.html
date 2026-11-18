@@ -17,7 +17,7 @@
       .wrapper { grid-template-columns: 1fr; } 
     }
 
-    /* Overlay Kunci Akses (Muncul jika wajibAkses: true) */
+    /* Overlay Kunci Akses (Selalu muncul saat sesi baru/tab baru dibuka) */
     .auth-overlay {
       position: fixed; inset: 0; background: rgba(15, 23, 42, 0.92);
       backdrop-filter: blur(4px); z-index: 9999;
@@ -108,11 +108,11 @@
 </head>
 <body>
 
-  <!-- LAYAR KUNCI AKSES (Tampil otomatis jika wajibAkses = true) -->
+  <!-- LAYAR KUNCI AKSES -->
   <div id="auth-overlay" class="auth-overlay hidden">
     <div class="auth-box">
       <h3>Akses Terbatas</h3>
-      <p>Aplikasi ini hanya untuk pengguna terdaftar. Masukkan kode akses Anda untuk melanjutkan.</p>
+      <p>Masukkan kode akses khusus perangkat ini untuk masuk.</p>
       <input type="text" id="auth-code-input" class="auth-input" placeholder="KODE AKSES">
       <button type="button" id="auth-submit-btn" class="auth-btn">Masuk Aplikasi</button>
       <div id="auth-error-msg" class="auth-error"></div>
@@ -258,26 +258,20 @@
   <script>
     (function() {
       /* ========================================================================
-         PENGATURAN IZIN AKSES PENGGUNA (EDIT BAGIAN INI UNTUK ON / OFF)
+         PENGATURAN IZIN AKSES PERANGKAT
          ======================================================================== */
       var ACCESS_CONFIG = {
-        // Ubah menjadi true untuk mengunci web dengan kode akses.
-        // Ubah menjadi false untuk mematikan kunci akses (bebas diakses siapa saja).
         wajibAkses: true,
-
-        // Daftar kode akses yang diizinkan (gunakan huruf kapital)
         daftarKode: [
-          'KARAWO2026',
-          'RCRAFTVIP',
-          'SULAM01'
-        ],
-
-        // Kunci penyimpanan sesi di browser perangkat pengguna
-        storageKey: 'karawo_access_granted_v1'
+          'HP-DEVICE-01',
+          'LAPTOP-02',
+          'TABLET-03',
+          'VIP-USER-99'
+        ]
       };
 
       /* ========================================================================
-         LOGIKA VALIDASI & PENGUNCIAN AKSES
+         LOGIKA KEAMANAN 1 KODE UNTUK 1 DEVICE & SELALU MINTA SAAT DIAKSES
          ======================================================================== */
       var authOverlay = document.getElementById('auth-overlay');
       var authInput = document.getElementById('auth-code-input');
@@ -290,10 +284,10 @@
           return;
         }
 
-        var savedCode = '';
-        try { savedCode = localStorage.getItem(ACCESS_CONFIG.storageKey) || ''; } catch (e) {}
+        var activeCode = '';
+        try { activeCode = sessionStorage.getItem('karawo_active_device_code') || ''; } catch (e) {}
 
-        if (ACCESS_CONFIG.daftarKode.indexOf(savedCode) !== -1) {
+        if (activeCode && ACCESS_CONFIG.daftarKode.indexOf(activeCode) !== -1) {
           authOverlay.classList.add('hidden');
         } else {
           authOverlay.classList.remove('hidden');
@@ -303,17 +297,44 @@
       function prosesLoginAkses() {
         var inputVal = (authInput.value || '').trim().toUpperCase();
         if (!inputVal) {
-          authError.textContent = 'Silakan ketik kode akses terlebih dahulu.';
+          authError.textContent = 'Silakan masukkan kode akses.';
           return;
         }
 
-        if (ACCESS_CONFIG.daftarKode.indexOf(inputVal) !== -1) {
-          try { localStorage.setItem(ACCESS_CONFIG.storageKey, inputVal); } catch (e) {}
-          authError.textContent = '';
-          authOverlay.classList.add('hidden');
-        } else {
-          authError.textContent = 'Kode akses tidak valid atau tidak terdaftar.';
+        if (ACCESS_CONFIG.daftarKode.indexOf(inputVal) === -1) {
+          authError.textContent = 'Kode akses tidak valid.';
+          return;
         }
+
+        var usedDevices = {};
+        try {
+          usedDevices = JSON.parse(localStorage.getItem('karawo_global_device_registry') || '{}');
+        } catch (e) {}
+
+        var currentDeviceToken = '';
+        try {
+          currentDeviceToken = localStorage.getItem('karawo_my_device_token');
+          if (!currentDeviceToken) {
+            currentDeviceToken = 'dev_' + Math.random().toString(36).substr(2, 9) + Date.now();
+            localStorage.setItem('karawo_my_device_token', currentDeviceToken);
+          }
+        } catch (e) {
+          currentDeviceToken = 'fallback_dev';
+        }
+
+        if (usedDevices[inputVal] && usedDevices[inputVal] !== currentDeviceToken) {
+          authError.textContent = 'Kode ini sudah digunakan di perangkat lain!';
+          return;
+        }
+
+        usedDevices[inputVal] = currentDeviceToken;
+        try {
+          localStorage.setItem('karawo_global_device_registry', JSON.stringify(usedDevices));
+          sessionStorage.setItem('karawo_active_device_code', inputVal);
+        } catch (e) {}
+
+        authError.textContent = '';
+        authOverlay.classList.add('hidden');
       }
 
       authBtn.onclick = prosesLoginAkses;
@@ -349,7 +370,7 @@
         counter: 0,
         grid: [],
         palette: [],
-        lastCellSize: 14 // Disimpan untuk kalkulasi klik piksel manual
+        lastCellSize: 14
       };
 
       var canvas = document.getElementById('canvas');
@@ -448,9 +469,8 @@
         var cols = state.grid[0].length;
         
         var rect = canvas.getBoundingClientRect();
-        // Skala koordinat klik sesuai resolusi asli kanvas
         var scaleX = canvas.width / rect.width;
-        var scaleY = (rows * state.lastCellSize) / rect.height; // Batas area grid (tidak termasuk footer watermark)
+        var scaleY = (rows * state.lastCellSize) / rect.height;
         
         var clickX = (e.clientX - rect.left) * scaleX;
         var clickY = (e.clientY - rect.top) * scaleY;
@@ -460,8 +480,6 @@
         
         if (rIdx >= 0 && rIdx < rows && cIdx >= 0 && cIdx < cols) {
           var currentColor = state.grid[rIdx][cIdx] || '#FFFFFF';
-          
-          // Buat elemen input color sementara untuk memilih warna baru secara kustom
           var colorPicker = document.createElement('input');
           colorPicker.type = 'color';
           colorPicker.value = currentColor === '#FFFFFF' ? '#262626' : currentColor;
@@ -472,8 +490,6 @@
             rebuildPaletteFromGrid();
             render();
           };
-          
-          // Picu klik pemilih warna secara otomatis
           colorPicker.click();
         }
       });
@@ -1081,7 +1097,7 @@
         if(rows === 0) return;
         var cols = state.grid[0].length;
         var size = Math.max(7, Math.min(16, Math.floor(750 / cols)));
-        state.lastCellSize = size; // Simpan ukuran sel aktual untuk akurasi klik manual
+        state.lastCellSize = size;
         drawPatternWithWatermark(canvas, ctx, size, false);
       }
 
