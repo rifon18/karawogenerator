@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Karawo Strimin Generator</title>
+  <style>
+    /* ==========================================================================
+       1. STYLING RESPONSIF & LAYOUT LINTAS DEVICE
+       ========================================================================== */
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { background: #f8fafc; color: #1e293b; padding: 10px; -webkit-text-size-adjust: 100%; }
+    
+    /* Wrapper Utama: Grid otomatis menyesuaikan desktop (2 kolom) dan mobile (1 kolom) */
+    .wrapper { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 340px 1fr; gap: 16px; }
+    @media (max-width: 768px) { 
+      .wrapper { grid-template-columns: 1fr; } 
+    }
+
+    /* Overlay Kunci Akses (Selalu muncul saat sesi baru/tab baru dibuka) */
+    .auth-overlay {
+      position: fixed; inset: 0; background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(4px); z-index: 9999;
+      display: flex; align-items: center; justify-content: center; padding: 16px;
+    }
+    .auth-box {
+      background: #ffffff; border-radius: 12px; padding: 24px;
+      max-width: 380px; width: 100%; text-align: center;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+    .auth-box h3 { font-size: 16px; color: #0f172a; margin-bottom: 6px; font-weight: 700; }
+    .auth-box p { font-size: 12px; color: #475569; margin-bottom: 16px; line-height: 1.5; }
+    .auth-input {
+      width: 100%; padding: 10px 12px; font-size: 14px; text-align: center;
+      letter-spacing: 1px; font-weight: 600; border: 1.5px solid #cbd5e1;
+      border-radius: 8px; margin-bottom: 10px; text-transform: uppercase;
+    }
+    .auth-input:focus { outline: none; border-color: #0f172a; }
+    .auth-btn {
+      width: 100%; padding: 10px; background: #0f172a; color: #fff;
+      border: none; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;
+    }
+    .auth-btn:hover { background: #334155; }
+    .auth-request-link {
+      display: inline-block; margin-top: 12px;
+      font-size: 12px; font-style: italic; color: #475569;
+      text-decoration: underline; cursor: pointer;
+      background: none; border: none; padding: 2px 4px;
+    }
+    .auth-request-link:hover { color: #0f172a; }
+    .auth-error { color: #dc2626; font-size: 11px; margin-top: 8px; font-weight: 600; min-height: 16px; }
+
+    /* Kartu Panel Kontrol */
+    .sidebar { display: flex; flex-direction: column; gap: 12px; }
+    .card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+    .card h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #475569; margin-bottom: 10px; font-weight: 700; }
+
+    /* Kotak Unggah Berkas & Drag & Drop */
+    .upload-box { position: relative; border: 2px dashed #cbd5e1; border-radius: 8px; padding: 16px 10px; text-align: center; background: #f8fafc; cursor: pointer; display: block; overflow: hidden; transition: 0.15s; }
+    .upload-box:hover, .upload-box.dragover { border-color: #0f172a; background: #e2e8f0; }
+    .upload-box p { font-size: 12px; font-weight: 600; color: #334155; pointer-events: none; }
+    .upload-box span { font-size: 10px; color: #64748b; display: block; margin-top: 2px; pointer-events: none; }
+    .upload-box input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 5; }
+
+    /* Tombol Generator Motif Acak */
+    .btn-random { width: 100%; margin-top: 8px; padding: 10px; font-size: 11px; background: #0f172a; color: #ffffff; border: none; border-radius: 6px; cursor: pointer; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .btn-random:hover { background: #334155; }
+
+    /* Input Formulir & Slider */
+    .text-input { width: 100%; padding: 8px 10px; font-size: 12px; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc; color: #0f172a; margin-bottom: 8px; }
+    .text-input:focus { outline: none; border-color: #0f172a; background: #fff; }
+    
+    .select-input { width: 100%; padding: 6px 8px; font-size: 11px; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc; color: #0f172a; margin-bottom: 8px; cursor: pointer; }
+    .text-options { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; margin-bottom: 8px; }
+
+    .control-group { margin-bottom: 12px; }
+    .label-row { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; font-weight: 500; }
+    .label-row strong { color: #0f172a; }
+    input[type="range"] { width: 100%; accent-color: #0f172a; cursor: pointer; }
+
+    /* Pilihan Mode & Checkbox */
+    .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+    .mode-btn { padding: 8px; font-size: 11px; background: #fff; border: 1px solid #cbd5e1; color: #475569; border-radius: 6px; cursor: pointer; font-weight: 600; }
+    .mode-btn.active { background: #0f172a; color: #fff; border-color: #0f172a; }
+
+    .checkbox-row { display: flex; justify-content: space-between; align-items: center; font-size: 11px; padding-top: 8px; border-top: 1px solid #f1f5f9; margin-top: 8px; }
+    .checkbox-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: #0f172a; cursor: pointer; }
+
+    /* Palet Warna Benang */
+    .color-presets { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+    .preset-dot { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #cbd5e1; cursor: pointer; }
+    .preset-dot.selected { border-color: #0f172a; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #0f172a; }
+    .custom-color-label { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 12px; cursor: pointer; background: #f8fafc; }
+
+    /* Panel Tombol Edit Warna Terpusat di Bagian Bawah */
+    .bottom-edit-bar {
+      background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
+      padding: 12px 14px; display: flex; flex-wrap: wrap; align-items: center;
+      justify-content: center; gap: 10px; font-size: 11px;
+    }
+    .bottom-edit-group { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
+    .btn-edit-toggle {
+      padding: 8px 18px; border-radius: 7px; border: 1px solid #0f172a;
+      background: #0f172a; color: #fff; font-size: 11px; font-weight: 700; cursor: pointer;
+    }
+    .btn-edit-toggle.editing {
+      background: #166534; border-color: #166534; color: #fff;
+    }
+    .tool-chip {
+      padding: 7px 10px; border-radius: 6px; border: 1px solid #cbd5e1;
+      background: #f8fafc; color: #334155; font-size: 11px; font-weight: 600; cursor: pointer;
+    }
+    .tool-chip:hover:not(:disabled) { border-color: #0f172a; background: #e2e8f0; }
+    .tool-chip.active { background: #0f172a; color: #fff; border-color: #0f172a; }
+    .tool-chip:disabled { opacity: 0.45; cursor: not-allowed; }
+    .brush-picker-box {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 8px; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc;
+      font-weight: 600; color: #0f172a;
+    }
+    .brush-picker-box input[type="color"] {
+      width: 22px; height: 22px; border: none; padding: 0; background: none; cursor: pointer;
+    }
+
+    /* Area Workspace & Kanvas Pratinjau */
+    .workspace { display: flex; flex-direction: column; gap: 10px; }
+    .info-bar { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; flex-wrap: wrap; gap: 6px; }
+    
+    .actions-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+    button.action-btn { cursor: pointer; border-radius: 6px; font-weight: 600; font-size: 11px; padding: 8px 12px; border: 1px solid transparent; }
+    .btn-primary { background: #0f172a; color: #fff; }
+    .btn-secondary { background: #f8fafc; color: #334155; border-color: #cbd5e1; }
+
+    .canvas-container { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; display: flex; align-items: center; justify-content: center; overflow: auto; min-height: 400px; -webkit-overflow-scrolling: touch; position: relative; }
+    canvas { max-width: 100%; height: auto; border: 1px solid #94a3b8; image-rendering: pixelated; image-rendering: crisp-edges; cursor: grab; touch-action: pan-y pinch-zoom; }
+    canvas.edit-active { cursor: crosshair; touch-action: none; }
+
+    .palette-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
+    .swatch-card { position: relative; display: flex; align-items: center; gap: 8px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc; cursor: pointer; transition: 0.15s; overflow: hidden; }
+    .swatch-card:hover { border-color: #0f172a; background: #e2e8f0; }
+    .swatch-box { width: 24px; height: 24px; border-radius: 4px; border: 1px solid #64748b; flex-shrink: 0; pointer-events: none; }
+    .swatch-info { flex: 1; min-width: 0; pointer-events: none; }
+    .swatch-card input[type="color"] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; border: none; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <!-- LAYAR KUNCI AKSES -->
+  <div id="auth-overlay" class="auth-overlay hidden">
+    <div class="auth-box">
+      <h3>Akses Terbatas!</h3>
+      <p>Masukkan kode akses untuk menggunakan aplikasi.</p>
+      <input type="text" id="auth-code-input" class="auth-input" placeholder="KODE AKSES">
+      <button type="button" id="auth-submit-btn" class="auth-btn">Masuk Aplikasi</button>
+      <div>
+        <a id="auth-request-link" class="auth-request-link" href="#" target="_blank" rel="noopener noreferrer">minta kode akses</a>
+      </div>
+      <div id="auth-error-msg" class="auth-error"></div>
+    </div>
+  </div>
+
+  <!-- APLIKASI UTAMA -->
+  <div id="app-wrapper" class="wrapper">
+    <!-- PANEL KONTROL (SIDEBAR) -->
+    <aside class="sidebar">
+      <div class="card">
+        <h2>Sumber Gambar</h2>
+        <div class="upload-box" id="drop-zone">
+          <p>Ketuk atau Seret Gambar ke Sini</p>
+          <input type="file" id="file-input" accept="image/*">
+        </div>
+        <div class="checkbox-row" style="margin-top:8px; padding-top:6px;">
+          <span>2D</span>
+          <input type="checkbox" id="input-cartoon" checked>
+        </div>
+        <button type="button" class="btn-random" id="btn-random">Sampel Motif</button>
+        <div style="font-size:10px; color:#64748b; text-align:center; margin-top:6px;" id="motif-label">Status: Siap</div>
+      </div>
+
+      <div class="card">
+        <h2>Tambah Teks & Posisi</h2>
+        <input type="text" id="text-input" class="text-input" placeholder="Ketik teks / nama..." maxlength="30">
+        
+        <div class="label-row"><span>Posisi Teks</span></div>
+        <select id="text-pos" class="select-input">
+          <option value="bottom">Bawah</option>
+          <option value="top">Atas</option>
+          <option value="middle">Tengah</option>
+        </select>
+
+        <div class="text-options">
+          <div>
+            <div class="label-row"><span>Ukuran</span><strong id="val-size">14 px</strong></div>
+            <input type="range" id="text-size" min="8" max="28" value="14">
+          </div>
+          <label class="custom-color-label">
+            <span>Warna</span>
+            <input type="color" id="text-color" value="#991B1B" style="width:16px; height:16px; border:none; padding:0; background:none; cursor:pointer;">
+          </label>
+        </div>
+        <div class="checkbox-row">
+          <span>Hanya Tampilkan Teks Saja</span>
+          <input type="checkbox" id="text-only">
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Mode & Deteksi</h2>
+        <div class="mode-grid">
+          <button type="button" id="mode-mono" class="mode-btn active">Hitam Putih</button>
+          <button type="button" id="mode-color" class="mode-btn">Warna</button>
+        </div>
+
+        <div id="mono-box">
+          <div class="control-group">
+            <div class="label-row"><span>Ketajaman</span><strong id="val-thresh">145</strong></div>
+            <input type="range" id="input-thresh" min="20" max="240" value="145">
+          </div>
+          <div class="checkbox-row">
+            <span>Balik Warna</span>
+            <input type="checkbox" id="input-invert">
+          </div>
+        </div>
+
+        <div id="color-box" class="hidden">
+          <div class="control-group">
+            <div class="label-row"><span>Toleransi Hapus Background</span><strong id="val-tol">40</strong></div>
+            <input type="range" id="input-tol" min="5" max="150" value="40">
+          </div>
+          <div class="control-group">
+            <div class="label-row"><span>Jumlah Warna</span><strong id="val-cols-num">5 warna</strong></div>
+            <input type="range" id="input-cols-num" min="2" max="10" value="5">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Grid, Kepadatan & Benang</h2>
+        <div class="control-group">
+          <div class="label-row"><span>Kepadatan Piksel (Resolusi)</span><strong id="val-density">Default</strong></div>
+          <input type="range" id="input-density" min="40" max="240" step="20" value="120">
+        </div>
+
+        <div class="control-group">
+          <div class="label-row"><span>Lebar Kolom</span><strong id="val-cols">100 kolom</strong></div>
+          <input type="range" id="input-cols" min="30" max="150" value="100">
+        </div>
+
+        <div class="control-group">
+          <div class="label-row"><span>Margin Tepi</span><strong id="val-pad">5 kotak</strong></div>
+          <input type="range" id="input-pad" min="0" max="20" value="5">
+        </div>
+
+        <div id="ink-section" style="padding-top: 8px; border-top: 1px solid #f1f5f9; margin-top: 8px;">
+          <div class="label-row"><span>Warna Benang:</span><strong id="val-ink">#262626</strong></div>
+          <div class="color-presets">
+            <button type="button" class="preset-dot selected" data-c="#262626" style="background:#262626;"></button>
+            <button type="button" class="preset-dot" data-c="#991B1B" style="background:#991B1B;"></button>
+            <button type="button" class="preset-dot" data-c="#1E3A8A" style="background:#1E3A8A;"></button>
+            <button type="button" class="preset-dot" data-c="#166534" style="background:#166534;"></button>
+            <button type="button" class="preset-dot" data-c="#B45309" style="background:#B45309;"></button>
+            <button type="button" class="preset-dot" data-c="#6B21A8" style="background:#6B21A8;"></button>
+            <label class="custom-color-label">
+              <span>Lain...</span>
+              <input type="color" id="input-ink" value="#262626" style="width:16px; height:16px; border:none; padding:0; background:none; cursor:pointer;">
+            </label>
+          </div>
+        </div>
+
+        <div class="checkbox-row">
+          <span>Garis Pixel</span>
+          <input type="checkbox" id="input-grid" checked>
+        </div>
+      </div>
+    </aside>
+
+    <!-- AREA PRATINJAU KANVAS & WORKSPACE -->
+    <section class="workspace">
+      <div class="info-bar">
+        <div>Pixel: <strong id="info-dim">0 × 0</strong> | Titik: <strong id="info-pts">0</strong></div>
+        <div class="actions-bar">
+          <button type="button" id="btn-svg" class="action-btn btn-secondary">Unduh SVG</button>
+          <button type="button" id="btn-png" class="action-btn btn-primary" title="Unduh PNG Transparan + Grid Strimin Khusus Motif">Unduh PNG (Transparan)</button>
+        </div>
+      </div>
+
+      <div class="canvas-container">
+        <canvas id="canvas"></canvas>
+      </div>
+
+      <!-- PANEL EDIT WARNA DI TENGAH BAWAH (TIDAK AKTIF OTOMATIS) -->
+      <div class="bottom-edit-bar">
+        <div class="bottom-edit-group">
+          <button type="button" id="btn-toggle-edit" class="btn-edit-toggle">Edit Warna</button>
+          <div id="edit-controls-panel" class="bottom-edit-group hidden">
+            <label class="brush-picker-box" title="Pilih warna untuk mengubah piksel gambar">
+              <span>Warna</span>
+              <input type="color" id="pixel-brush-color" value="#ffffff">
+              <strong id="pixel-brush-hex">#ffffff</strong>
+            </label>
+            <button type="button" id="tool-paint" class="tool-chip active">Ubah Warna</button>
+            <button type="button" id="tool-eyedrop" class="tool-chip">Sedot</button>
+            <button type="button" id="tool-erase" class="tool-chip">Hapus</button>
+            <button type="button" id="btn-undo" class="tool-chip" disabled title="Batalkan perubahan piksel terakhir">↩ Undo (0)</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card hidden" id="palette-card">
+        <h2>Rincian Warna Benang (Klik kotak untuk ubah warna)</h2>
+        <div class="palette-grid" id="palette-grid"></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- SCRIPT UTAMA JAVASCRIPT -->
+  <script>
+    (function() {
+      /* ========================================================================
+         PENGATURAN IZIN AKSES PERANGKAT & LINK SOSIAL MEDIA
+         ======================================================================== */
+      var ACCESS_CONFIG = {
+        wajibAkses: true,
+
+        // Ganti URL di bawah ini dengan link WhatsApp, Instagram, atau sosial media Anda
+        linkSosmed: 'https://wa.me/6282199421893?text=Halo%20Admin,%20saya%20ingin%20minta%20kode%20akses%20Karawo%20Strimin%20Generator',
+
+        // Anda bebas menambah, mengubah, atau menghapus kode akses manual di bawah ini
+        daftarKode: [
+          'RCRAFT-ID',
+          'CHAKS-STORE',
+          'DEVICE03',
+          'VIP-USER-99'
+        ]
+      };
+
+      /* ========================================================================
+         LOGIKA KEAMANAN 1 KODE UNTUK 1 DEVICE & SELALU MINTA SAAT DIAKSES
+         ======================================================================== */
+      var authOverlay = document.getElementById('auth-overlay');
+      var authInput = document.getElementById('auth-code-input');
+      var authBtn = document.getElementById('auth-submit-btn');
+      var authRequestLink = document.getElementById('auth-request-link');
+      var authError = document.getElementById('auth-error-msg');
+
+      // Pasang link sosial media dari konfigurasi ke tombol "minta kode akses"
+      if (authRequestLink) {
+        authRequestLink.href = ACCESS_CONFIG.linkSosmed || '#';
+      }
+
+      function cekIzinAkses() {
+        if (!ACCESS_CONFIG.wajibAkses) {
+          authOverlay.classList.add('hidden');
+          return;
+        }
+
+        var activeCode = '';
+        try { activeCode = sessionStorage.getItem('karawo_active_device_code') || ''; } catch (e) {}
+
+        if (activeCode && ACCESS_CONFIG.daftarKode.indexOf(activeCode) !== -1) {
+          authOverlay.classList.add('hidden');
+        } else {
+          authOverlay.classList.remove('hidden');
+        }
+      }
+
+      function prosesLoginAkses() {
+        var inputVal = (authInput.value || '').trim().toUpperCase();
+        if (!inputVal) {
+          authError.textContent = 'Silakan masukkan kode akses.';
+          return;
+        }
+
+        if (ACCESS_CONFIG.daftarKode.indexOf(inputVal) === -1) {
+          authError.textContent = 'Kode akses tidak valid.';
+          return;
+        }
+
+        var usedDevices = {};
+        try {
+          usedDevices = JSON.parse(localStorage.getItem('karawo_global_device_registry') || '{}');
+        } catch (e) {}
+
+        var currentDeviceToken = '';
+        try {
+          currentDeviceToken = localStorage.getItem('karawo_my_device_token');
+          if (!currentDeviceToken) {
+            currentDeviceToken = 'dev_' + Math.random().toString(36).substr(2, 9) + Date.now();
+            localStorage.setItem('karawo_my_device_token', currentDeviceToken);
+          }
+        } catch (e) {
+          currentDeviceToken = 'fallback_dev';
+        }
+
+        if (usedDevices[inputVal] && usedDevices[inputVal] !== currentDeviceToken) {
+          authError.textContent = 'Kode ini sudah digunakan di perangkat lain!';
+          return;
+        }
+
+        usedDevices[inputVal] = currentDeviceToken;
+        try {
+          localStorage.setItem('karawo_global_device_registry', JSON.stringify(usedDevices));
+          sessionStorage.setItem('karawo_active_device_code', inputVal);
+        } catch (e) {}
+
+        authError.textContent = '';
+        authOverlay.classList.add('hidden');
+      }
+
+      authBtn.onclick = prosesLoginAkses;
+      authInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') prosesLoginAkses();
+      });
+
+      cekIzinAkses();
+
+      /* ========================================================================
+         1. OBJEK STATE APLIKASI
+         ======================================================================== */
+      var state = {
+        rawUploadCanvas: null,
+        srcCanvas: null,
+        isUploadedFile: false,
+        cartoonEffect: true,
+        mode: 'mono',
+        density: 120,
+        cols: 100,
+        pad: 5,
+        thresh: 145,
+        invert: false,
+        ink: '#262626',
+        tol: 40,
+        nColors: 5,
+        showGrid: true,
+        text: '',
+        textPos: 'bottom',
+        textSize: 14,
+        textColor: '#991B1B',
+        textOnly: false,
+        counter: 0,
+        grid: [],
+        palette: [],
+        lastCellSize: 14,
+        editModeEnabled: false,
+        brushColor: '#ffffff',
+        pixelTool: 'paint', // 'paint' | 'eyedrop' | 'erase'
+        isPointerDrawing: false,
+        strokeSnapshotTaken: false,
+        undoStack: []
+      };
+
+      var canvas = document.getElementById('canvas');
+      var ctx = canvas.getContext('2d');
+
+      function el(id) { return document.getElementById(id); }
+
+      /* ========================================================================
+         2. UNDO STACK, KONTROL EDIT WARNA BAWAH & EVENT LISTENER
+         ======================================================================== */
+      function cloneGrid(g) {
+        return g.map(function(row) { return row.slice(); });
+      }
+
+      function updateUndoButton() {
+        var btn = el('btn-undo');
+        var count = state.undoStack.length;
+        btn.disabled = count === 0;
+        btn.textContent = '↩ Undo (' + count + ')';
+      }
+
+      function pushUndoSnapshot() {
+        if (state.grid.length === 0) return;
+        state.undoStack.push(cloneGrid(state.grid));
+        if (state.undoStack.length > 30) {
+          state.undoStack.shift();
+        }
+        updateUndoButton();
+      }
+
+      function performUndo() {
+        if (state.undoStack.length === 0) return;
+        state.grid = state.undoStack.pop();
+        updateUndoButton();
+        rebuildPaletteFromGrid();
+        render();
+      }
+
+      function syncEditModeUI() {
+        var toggleBtn = el('btn-toggle-edit');
+        var panel = el('edit-controls-panel');
+
+        if (!state.editModeEnabled) {
+          state.isPointerDrawing = false;
+          state.strokeSnapshotTaken = false;
+          toggleBtn.className = 'btn-edit-toggle';
+          toggleBtn.textContent = 'Edit Warna';
+          panel.classList.add('hidden');
+          canvas.classList.remove('edit-active');
+          return;
+        }
+
+        toggleBtn.className = 'btn-edit-toggle editing';
+        toggleBtn.textContent = 'Selesai Edit';
+        panel.classList.remove('hidden');
+        canvas.classList.add('edit-active');
+      }
+
+      function setBrushColor(hex) {
+        var normalized = (hex || '#ffffff').toUpperCase();
+        state.brushColor = normalized;
+        el('pixel-brush-color').value = normalized;
+        el('pixel-brush-hex').textContent = normalized;
+      }
+
+      function setPixelTool(toolName) {
+        state.pixelTool = toolName;
+        el('tool-paint').className = 'tool-chip' + (toolName === 'paint' ? ' active' : '');
+        el('tool-eyedrop').className = 'tool-chip' + (toolName === 'eyedrop' ? ' active' : '');
+        el('tool-erase').className = 'tool-chip' + (toolName === 'erase' ? ' active' : '');
+        syncEditModeUI();
+      }
+
+      el('btn-toggle-edit').onclick = function() {
+        state.editModeEnabled = !state.editModeEnabled;
+        syncEditModeUI();
+      };
+
+      el('pixel-brush-color').oninput = function(e) {
+        setBrushColor(e.target.value);
+      };
+
+      el('tool-paint').onclick = function() { setPixelTool('paint'); };
+      el('tool-eyedrop').onclick = function() { setPixelTool('eyedrop'); };
+      el('tool-erase').onclick = function() { setPixelTool('erase'); };
+      el('btn-undo').onclick = performUndo;
+
+      el('btn-random').onclick = makeRandomFlowerMotif;
+
+      el('input-cartoon').onchange = function(e) {
+        state.cartoonEffect = e.target.checked;
+        if (state.isUploadedFile && state.rawUploadCanvas) {
+          state.srcCanvas = state.cartoonEffect ? apply2DCartoonFilter(state.rawUploadCanvas, state.density) : getResizedCanvas(state.rawUploadCanvas, state.density);
+          update();
+        }
+      };
+
+      el('input-density').oninput = function(e) {
+        state.density = parseInt(e.target.value, 10);
+        el('val-density').textContent = state.density + ' px (Detail)';
+        if (state.isUploadedFile && state.rawUploadCanvas) {
+          state.srcCanvas = state.cartoonEffect ? apply2DCartoonFilter(state.rawUploadCanvas, state.density) : getResizedCanvas(state.rawUploadCanvas, state.density);
+          update();
+        }
+      };
+
+      el('text-input').oninput = function(e) { state.text = e.target.value; update(); };
+      el('text-pos').onchange = function(e) { state.textPos = e.target.value; update(); };
+      el('text-size').oninput = function(e) { state.textSize = parseInt(e.target.value, 10); el('val-size').textContent = state.textSize + ' px'; update(); };
+      el('text-color').oninput = function(e) { state.textColor = e.target.value.toUpperCase(); update(); };
+      el('text-only').onchange = function(e) { state.textOnly = e.target.checked; update(); };
+
+      el('mode-mono').onclick = function() {
+        state.mode = 'mono';
+        el('mode-mono').className = 'mode-btn active';
+        el('mode-color').className = 'mode-btn';
+        el('mono-box').className = '';
+        el('ink-section').className = '';
+        el('color-box').className = 'hidden';
+        el('palette-card').className = 'card hidden';
+        update();
+      };
+
+      el('mode-color').onclick = function() {
+        state.mode = 'color';
+        el('mode-color').className = 'mode-btn active';
+        el('mode-mono').className = 'mode-btn';
+        el('mono-box').className = 'hidden';
+        el('ink-section').className = 'hidden';
+        el('color-box').className = '';
+        el('palette-card').className = 'card';
+        update();
+      };
+
+      el('input-thresh').oninput = function(e) { state.thresh = parseInt(e.target.value, 10); el('val-thresh').textContent = state.thresh; update(); };
+      el('input-invert').onchange = function(e) { state.invert = e.target.checked; update(); };
+      el('input-cols').oninput = function(e) { state.cols = parseInt(e.target.value, 10); el('val-cols').textContent = state.cols + ' kolom'; update(); };
+      el('input-pad').oninput = function(e) { state.pad = parseInt(e.target.value, 10); el('val-pad').textContent = state.pad + ' kotak'; update(); };
+      el('input-tol').oninput = function(e) { state.tol = parseInt(e.target.value, 10); el('val-tol').textContent = state.tol; update(); };
+      
+      el('input-cols-num').oninput = function(e) { 
+        state.nColors = parseInt(e.target.value, 10); 
+        el('val-cols-num').textContent = state.nColors + ' warna'; 
+        update(); 
+      };
+      
+      el('input-grid').onchange = function(e) { state.showGrid = e.target.checked; render(); };
+
+      function setInk(hex) {
+        state.ink = hex.toUpperCase();
+        el('val-ink').textContent = state.ink;
+        el('input-ink').value = state.ink;
+        var dots = document.querySelectorAll('.preset-dot');
+        for(var i=0; i<dots.length; i++) {
+          dots[i].className = 'preset-dot' + (dots[i].getAttribute('data-c') === state.ink ? ' selected' : '');
+        }
+        update();
+      }
+
+      var dots = document.querySelectorAll('.preset-dot');
+      for(var i=0; i<dots.length; i++) {
+        (function(d) { d.onclick = function() { setInk(d.getAttribute('data-c')); }; })(dots[i]);
+      }
+      el('input-ink').oninput = function(e) { setInk(e.target.value); };
+      el('input-ink').onchange = function(e) { setInk(e.target.value); };
+
+      /* ========================================================================
+         3. EDIT WARNA PER PIKSEL PADA KANVAS (HANYA SAAT MODE EDIT AKTIF & PIKSEL TERISI)
+         ======================================================================== */
+      function getGridCoordsFromPointer(clientX, clientY) {
+        var rows = state.grid.length;
+        if (rows === 0) return null;
+        var cols = state.grid[0].length;
+        var rect = canvas.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) return null;
+
+        var gridCanvasHeight = rows * state.lastCellSize;
+        var scaleX = canvas.width / rect.width;
+        var scaleY = canvas.height / rect.height;
+
+        var xPx = (clientX - rect.left) * scaleX;
+        var yPx = (clientY - rect.top) * scaleY;
+
+        if (xPx < 0 || yPx < 0 || xPx >= cols * state.lastCellSize || yPx >= gridCanvasHeight) {
+          return null;
+        }
+
+        return {
+          r: Math.floor(yPx / state.lastCellSize),
+          c: Math.floor(xPx / state.lastCellSize)
+        };
+      }
+
+      function applyPixelActionAt(clientX, clientY) {
+        if (!state.editModeEnabled) return;
+        var pos = getGridCoordsFromPointer(clientX, clientY);
+        if (!pos) return;
+
+        var currentVal = state.grid[pos.r][pos.c];
+
+        // Kuas hanya berfungsi pada piksel gambar yang sudah terisi
+        if (!currentVal) {
+          return;
+        }
+
+        if (state.pixelTool === 'eyedrop') {
+          setBrushColor(currentVal);
+          setPixelTool('paint');
+          return;
+        }
+
+        if (state.pixelTool === 'erase') {
+          if (!state.strokeSnapshotTaken) {
+            pushUndoSnapshot();
+            state.strokeSnapshotTaken = true;
+          }
+          state.grid[pos.r][pos.c] = null;
+          rebuildPaletteFromGrid();
+          render();
+          return;
+        }
+
+        if (currentVal.toUpperCase() !== state.brushColor) {
+          if (!state.strokeSnapshotTaken) {
+            pushUndoSnapshot();
+            state.strokeSnapshotTaken = true;
+          }
+          state.grid[pos.r][pos.c] = state.brushColor;
+          rebuildPaletteFromGrid();
+          render();
+        }
+      }
+
+      canvas.addEventListener('pointerdown', function(e) {
+        if (!state.editModeEnabled) return;
+        state.isPointerDrawing = true;
+        state.strokeSnapshotTaken = false;
+        try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+        applyPixelActionAt(e.clientX, e.clientY);
+      });
+
+      canvas.addEventListener('pointermove', function(e) {
+        if (!state.editModeEnabled || !state.isPointerDrawing || state.pixelTool === 'eyedrop') return;
+        applyPixelActionAt(e.clientX, e.clientY);
+      });
+
+      function stopDrawing(e) {
+        if (!state.isPointerDrawing) return;
+        state.isPointerDrawing = false;
+        state.strokeSnapshotTaken = false;
+        if (e && e.pointerId !== undefined) {
+          try { canvas.releasePointerCapture(e.pointerId); } catch (err) {}
+        }
+      }
+
+      canvas.addEventListener('pointerup', stopDrawing);
+      canvas.addEventListener('pointercancel', stopDrawing);
+
+      /* ========================================================================
+         4. PENGELOLAAN UNGGAH BERKAS (DRAG & DROP)
+         ======================================================================== */
+      var dropZone = el('drop-zone');
+      var fileInput = el('file-input');
+
+      dropZone.addEventListener('dragover', function(e) { e.preventDefault(); e.stopPropagation(); dropZone.classList.add('dragover'); });
+      dropZone.addEventListener('dragleave', function(e) { e.preventDefault(); e.stopPropagation(); dropZone.classList.remove('dragover'); });
+      dropZone.addEventListener('drop', function(e) {
+        e.preventDefault(); e.stopPropagation(); dropZone.classList.remove('dragover');
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+          processUploadedFile(e.dataTransfer.files[0]);
+        }
+      });
+
+      fileInput.onchange = function(e) {
+        dropZone.classList.remove('dragover');
+        if (e.target.files && e.target.files[0]) {
+          processUploadedFile(e.target.files[0]);
+        }
+      };
+
+      function processUploadedFile(f) {
+        if (!f.type || f.type.indexOf('image/') !== 0) {
+          alert('Harap unggah file gambar (JPG, PNG, WEBP).');
+          return;
+        }
+        var r = new FileReader();
+        r.onload = function(ev) {
+          var img = new Image();
+          img.onload = function() {
+            var rawC = document.createElement('canvas');
+            rawC.width = img.width; rawC.height = img.height;
+            var cx = rawC.getContext('2d');
+            cx.fillStyle = '#ffffff';
+            cx.fillRect(0, 0, img.width, img.height);
+            cx.drawImage(img, 0, 0);
+
+            state.rawUploadCanvas = rawC;
+            state.isUploadedFile = true;
+            state.srcCanvas = state.cartoonEffect ? apply2DCartoonFilter(rawC, state.density) : getResizedCanvas(rawC, state.density);
+            state.textOnly = false;
+            el('text-only').checked = false;
+            el('motif-label').textContent = 'Kartun 2D: ' + f.name;
+            update();
+          };
+          img.src = ev.target.result;
+        };
+        r.readAsDataURL(f);
+      }
+
+      function getResizedCanvas(sourceC, density) {
+        var sc = Math.min(1, density / Math.max(sourceC.width, sourceC.height));
+        var w = Math.max(20, Math.round(sourceC.width * sc));
+        var h = Math.max(20, Math.round(sourceC.height * sc));
+        var c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        var x = c.getContext('2d');
+        x.fillStyle = '#ffffff'; x.fillRect(0, 0, w, h);
+        x.drawImage(sourceC, 0, 0, w, h);
+        return c;
+      }
+
+      /* ========================================================================
+         5. FILTER KARTUN 2D & SOBEL EDGE DETECTION
+         ======================================================================== */
+      function apply2DCartoonFilter(sourceC, density) {
+        var sc = Math.min(1, density / Math.max(sourceC.width, sourceC.height));
+        var w = Math.max(20, Math.round(sourceC.width * sc));
+        var h = Math.max(20, Math.round(sourceC.height * sc));
+
+        var smoothC = document.createElement('canvas');
+        smoothC.width = w; smoothC.height = h;
+        var sCtx = smoothC.getContext('2d');
+        sCtx.fillStyle = '#ffffff'; sCtx.fillRect(0, 0, w, h);
+        sCtx.filter = 'contrast(120%) saturate(110%)';
+        sCtx.drawImage(sourceC, 0, 0, w, h);
+        sCtx.filter = 'none';
+
+        var imgData = sCtx.getImageData(0, 0, w, h);
+        var d = imgData.data;
+
+        var gray = new Float32Array(w * h);
+        for (var i = 0; i < w * h; i++) {
+          var idx = i * 4;
+          gray[i] = 0.299 * d[idx] + 0.587 * d[idx + 1] + 0.114 * d[idx + 2];
+        }
+
+        var outC = document.createElement('canvas');
+        outC.width = w; outC.height = h;
+        var oCtx = outC.getContext('2d');
+        var outImg = oCtx.createImageData(w, h);
+        var od = outImg.data;
+
+        var levels = 5;
+        var step = 255 / (levels - 1);
+
+        for (var y = 0; y < h; y++) {
+          for (var x = 0; x < w; x++) {
+            var pos = y * w + x;
+            var pIdx = pos * 4;
+
+            var edge = 0;
+            if (x > 0 && x < w - 1 && y > 0 && y < h - 1) {
+              var gx =
+                -gray[(y - 1) * w + (x - 1)] + gray[(y - 1) * w + (x + 1)] +
+                -2 * gray[y * w + (x - 1)] + 2 * gray[y * w + (x + 1)] +
+                -gray[(y + 1) * w + (x - 1)] + gray[(y + 1) * w + (x + 1)];
+              var gy =
+                -gray[(y - 1) * w + (x - 1)] - 2 * gray[(y - 1) * w + x] - gray[(y - 1) * w + (x + 1)] +
+                gray[(y + 1) * w + (x - 1)] + 2 * gray[(y + 1) * w + x] + gray[(y + 1) * w + (x + 1)];
+              edge = Math.sqrt(gx * gx + gy * gy);
+            }
+
+            if (edge > 150) {
+              od[pIdx] = 24; od[pIdx + 1] = 24; od[pIdx + 2] = 27; od[pIdx + 3] = 255;
+            } else {
+              var r = Math.round(Math.round(d[pIdx] / step) * step);
+              var g = Math.round(Math.round(d[pIdx + 1] / step) * step);
+              var b = Math.round(Math.round(d[pIdx + 2] / step) * step);
+
+              if (r > 235 && g > 235 && b > 235) {
+                r = 255; g = 255; b = 255;
+              }
+
+              od[pIdx] = Math.min(255, r);
+              od[pIdx + 1] = Math.min(255, g);
+              od[pIdx + 2] = Math.min(255, b);
+              od[pIdx + 3] = 255;
+            }
+          }
+        }
+
+        oCtx.putImageData(outImg, 0, 0);
+        return outC;
+      }
+
+      /* ========================================================================
+         6. GENERATOR MOTIF BUNGA ACAK
+         ======================================================================== */
+      function makeRandomFlowerMotif() {
+        var s = state.counter++;
+        var c = document.createElement('canvas');
+        c.width = 400; c.height = 400;
+        var x = c.getContext('2d');
+        x.fillStyle = '#fff'; x.fillRect(0,0,400,400);
+
+        x.save();
+        x.translate(200, 200);
+
+        var flowerThemes = [
+          { name: 'Mawar Merah Klasik', outer: '#991B1B', inner: '#EF4444', accent: '#F59E0B', leaf: '#166534' },
+          { name: 'Teratai Biru Anggun', outer: '#1E3A8A', inner: '#3B82F6', accent: '#93C5FD', leaf: '#14532D' },
+          { name: 'Anggrek Ungu Mewah', outer: '#6B21A8', inner: '#A855F7', accent: '#F472B6', leaf: '#166534' },
+          { name: 'Bunga Matahari Emas', outer: '#B45309', inner: '#D97706', accent: '#FEF08A', leaf: '#15803D' },
+          { name: 'Soka Merah Muda', outer: '#BE123C', inner: '#FB7185', accent: '#FFF1F2', leaf: '#166534' },
+          { name: 'Seruni Tosca', outer: '#0F766E', inner: '#14B8A6', accent: '#99F6E4', leaf: '#1E3A8A' }
+        ];
+
+        var theme = flowerThemes[s % flowerThemes.length];
+        var petalCounts = [6, 8, 10, 12];
+        var petals = petalCounts[Math.floor((s * 3) % petalCounts.length)];
+        var styleVariant = s % 5;
+
+        el('motif-label').textContent = 'Motif: ' + theme.name + ' (' + petals + ' Kelopak)';
+
+        x.fillStyle = theme.leaf;
+        var leafCount = (petals % 2 === 0) ? petals / 2 : petals;
+        for(var l=0; l<leafCount; l++) {
+          x.save();
+          x.rotate((Math.PI * 2 / leafCount) * l + (Math.PI / petals));
+          x.beginPath();
+          x.moveTo(0, -50);
+          x.quadraticCurveTo(32, -120, 0, -175);
+          x.quadraticCurveTo(-32, -120, 0, -50);
+          x.fill();
+          x.restore();
+        }
+
+        x.fillStyle = theme.outer;
+        for(var i=0; i<petals; i++) {
+          x.save();
+          x.rotate((Math.PI * 2 / petals) * i);
+          
+          if(styleVariant === 0) {
+            x.beginPath();
+            x.moveTo(0, -22);
+            x.quadraticCurveTo(40, -90, 0, -150);
+            x.quadraticCurveTo(-40, -90, 0, -22);
+            x.fill();
+          } else if(styleVariant === 1) {
+            x.beginPath();
+            x.ellipse(0, -82, 26, 55, 0, 0, Math.PI * 2);
+            x.fill();
+          } else if(styleVariant === 2) {
+            x.beginPath();
+            x.moveTo(0, -20);
+            x.bezierCurveTo(50, -70, 42, -145, 0, -125);
+            x.bezierCurveTo(-42, -145, -50, -70, 0, -20);
+            x.fill();
+          } else if(styleVariant === 3) {
+            x.beginPath();
+            x.moveTo(0, -25);
+            x.lineTo(24, -90);
+            x.lineTo(0, -155);
+            x.lineTo(-24, -90);
+            x.closePath();
+            x.fill();
+          } else {
+            x.beginPath();
+            x.moveTo(0, -18);
+            x.quadraticCurveTo(44, -75, 16, -138);
+            x.lineTo(0, -150);
+            x.lineTo(-16, -138);
+            x.quadraticCurveTo(-44, -75, 0, -18);
+            x.fill();
+          }
+          x.restore();
+        }
+
+        x.fillStyle = theme.inner;
+        for(var j=0; j<petals; j++) {
+          x.save();
+          x.rotate((Math.PI * 2 / petals) * j + (Math.PI / petals));
+          x.beginPath();
+          x.moveTo(0, -15);
+          x.quadraticCurveTo(22, -55, 0, -92);
+          x.quadraticCurveTo(-22, -55, 0, -15);
+          x.fill();
+          x.restore();
+        }
+
+        x.fillStyle = theme.accent;
+        x.beginPath();
+        x.arc(0, 0, 25, 0, Math.PI * 2);
+        x.fill();
+
+        x.fillStyle = theme.outer;
+        x.beginPath();
+        x.arc(0, 0, 10, 0, Math.PI * 2);
+        x.fill();
+
+        x.restore();
+
+        state.isUploadedFile = false;
+        state.srcCanvas = c;
+        state.textOnly = false;
+        el('text-only').checked = false;
+        update();
+      }
+
+      function getTextGrid(txt, cols, size, colHex) {
+        if(!txt.trim()) return [];
+        var tc = document.createElement('canvas');
+        var tx = tc.getContext('2d');
+        var font = 'bold ' + size + 'px monospace';
+        tx.font = font;
+        var m = tx.measureText(txt);
+        var tw = Math.ceil(m.width) + 4;
+        var th = Math.ceil(size * 1.4);
+        tc.width = Math.max(cols, tw); tc.height = th;
+        tx.fillStyle = '#fff'; tx.fillRect(0,0,tc.width,tc.height);
+        tx.fillStyle = '#000'; tx.font = font; tx.textBaseline = 'middle'; tx.textAlign = 'center';
+        tx.fillText(txt, tc.width/2, tc.height/2);
+
+        var finalC = tc;
+        if(tw > cols) {
+          var sc = cols / tw;
+          var sh = Math.max(7, Math.round(th * sc));
+          finalC = document.createElement('canvas');
+          finalC.width = cols; finalC.height = sh;
+          var fx = finalC.getContext('2d');
+          fx.fillStyle = '#fff'; fx.fillRect(0,0,cols,sh);
+          fx.drawImage(tc, 0,0,cols,sh);
+        }
+
+        var w = finalC.width, h = finalC.height;
+        var idata = finalC.getContext('2d').getImageData(0,0,w,h).data;
+        var rows = [];
+        var offX = Math.floor((cols - w) / 2);
+
+        for(var r=0; r<h; r++) {
+          var arr = new Array(cols).fill(null);
+          var has = false;
+          for(var c=0; c<w; c++) {
+            var idx = (r * w + c) * 4;
+            var lum = 0.299 * idata[idx] + 0.587 * idata[idx+1] + 0.114 * idata[idx+2];
+            if(lum < 165) {
+              var tcIndex = c + offX;
+              if(tcIndex >= 0 && tcIndex < cols) {
+                arr[tcIndex] = colHex;
+                has = true;
+              }
+            }
+          }
+          if(has) rows.push(arr);
+        }
+        return rows;
+      }
+
+      /* ========================================================================
+         7. PALET WARNA & STATISTIK TITIK STRIMIN
+         ======================================================================== */
+      function rebuildPaletteFromGrid() {
+        var counts = {};
+        var totalPts = 0;
+        var rows = state.grid.length;
+        var cols = rows > 0 ? state.grid[0].length : 0;
+
+        for(var r=0; r<rows; r++) {
+          for(var c=0; c<cols; c++) {
+            var col = state.grid[r][c];
+            if(col) {
+              totalPts++;
+              counts[col] = (counts[col] || 0) + 1;
+            }
+          }
+        }
+
+        state.palette = Object.keys(counts).map(function(k){
+          return { hex: k, count: counts[k] };
+        }).sort(function(a, b){ return b.count - a.count; });
+
+        el('info-dim').textContent = cols + ' × ' + rows;
+        el('info-pts').textContent = totalPts;
+
+        if(state.mode === 'color') {
+          renderPalette();
+        }
+      }
+
+      /* ========================================================================
+         8. PEMROSESAN UTAMA GRID PIKSEL GAMBAR
+         ======================================================================== */
+      function update() {
+        var pad = state.pad;
+        var objCols = Math.max(10, state.cols - pad * 2);
+        var totalCols = objCols + pad * 2;
+        var motifRows = [];
+
+        if(!state.textOnly && state.srcCanvas) {
+          var src = state.srcCanvas;
+          var scale = Math.min(1, state.density / Math.max(src.width, src.height));
+          var sw = Math.max(1, Math.round(src.width * scale));
+          var sh = Math.max(1, Math.round(src.height * scale));
+          var wc = document.createElement('canvas');
+          wc.width = sw; wc.height = sh;
+          var wx = wc.getContext('2d');
+          wx.fillStyle = '#ffffff'; wx.fillRect(0,0,sw,sh);
+          wx.drawImage(src, 0,0,sw,sh);
+
+          var idata = wx.getImageData(0,0,sw,sh);
+          var data = idata.data;
+          var minX=sw, minY=sh, maxX=0, maxY=0, found=false;
+
+          if(state.mode === 'mono') {
+            for(var y=0; y<sh; y++) {
+              for(var x=0; x<sw; x++) {
+                var idx = (y * sw + x) * 4;
+                var lum = 0.299*data[idx] + 0.587*data[idx+1] + 0.114*data[idx+2];
+                var ink = state.invert ? (lum > state.thresh) : (lum < state.thresh);
+                if(ink) {
+                  found = true;
+                  if(x < minX) minX = x; if(x > maxX) maxX = x;
+                  if(y < minY) minY = y; if(y > maxY) maxY = y;
+                }
+              }
+            }
+          } else {
+            var visited = new Uint8Array(sw * sh);
+            var queue = [];
+            var tolSq = state.tol * state.tol * 3;
+            var distSq = function(i1, i2) {
+              var dr = data[i1] - data[i2], dg = data[i1+1] - data[i2+1], db = data[i1+2] - data[i2+2];
+              return dr*dr + dg*dg + db*db;
+            };
+            for(var x1=0; x1<sw; x1++) { queue.push([x1, 0, 0]); queue.push([x1, sh-1, (sh-1)*sw+x1]); }
+            for(var y1=0; y1<sh; y1++) { queue.push([0, y1, y1*sw]); queue.push([sw-1, y1, y1*sw+(sw-1)]); }
+
+            var head = 0;
+            while(head < queue.length) {
+              var q = queue[head++];
+              var cx = q[0], cy = q[1], ref = q[2];
+              var p = cy * sw + cx;
+              if(visited[p]) continue;
+              visited[p] = 1;
+              if(distSq(p*4, ref*4) <= tolSq) {
+                data[p*4 + 3] = 0;
+                if(cx > 0 && !visited[p-1]) queue.push([cx-1, cy, ref]);
+                if(cx < sw-1 && !visited[p+1]) queue.push([cx+1, cy, ref]);
+                if(cy > 0 && !visited[p-sw]) queue.push([cx, cy-1, ref]);
+                if(cy < sh-1 && !visited[p+sw]) queue.push([cx, cy+1, ref]);
+              }
+            }
+            wx.putImageData(idata, 0, 0);
+
+            for(var y2=0; y2<sh; y2++) {
+              for(var x2=0; x2<sw; x2++) {
+                if(data[(y2*sw + x2)*4 + 3] > 128) {
+                  found = true;
+                  if(x2 < minX) minX = x2; if(x2 > maxX) maxX = x2;
+                  if(y2 < minY) minY = y2; if(y2 > maxY) maxY = y2;
+                }
+              }
+            }
+          }
+
+          if(!found) { minX=0; minY=0; maxX=sw-1; maxY=sh-1; }
+          var cw = maxX - minX + 1; var ch = maxY - minY + 1;
+          var objRows = Math.max(10, Math.round(objCols * (ch / cw)));
+
+          var sc = document.createElement('canvas');
+          sc.width = objCols; sc.height = objRows;
+          var sx = sc.getContext('2d');
+          sx.imageSmoothingEnabled = false;
+          sx.drawImage(wc, minX, minY, cw, ch, 0, 0, objCols, objRows);
+          var sdata = sx.getImageData(0,0,objCols,objRows).data;
+
+          for(var r=0; r<objRows; r++) motifRows.push(new Array(totalCols).fill(null));
+
+          if(state.mode === 'mono') {
+            for(var r=0; r<objRows; r++) {
+              for(var c=0; c<objCols; c++) {
+                var i = (r * objCols + c) * 4;
+                var lum = 0.299*sdata[i] + 0.587*sdata[i+1] + 0.114*sdata[i+2];
+                if(state.invert ? (lum > state.thresh) : (lum < state.thresh)) {
+                  motifRows[r][c + pad] = state.ink;
+                }
+              }
+            }
+          } else {
+            var pixels = [];
+            for(var i=0; i<sdata.length; i+=4) {
+              if(sdata[i+3] > 128) pixels.push([sdata[i], sdata[i+1], sdata[i+2]]);
+            }
+            var centroids = getFlatPalette(pixels, state.nColors);
+            for(var r=0; r<objRows; r++) {
+              for(var c=0; c<objCols; c++) {
+                var i = (r * objCols + c) * 4;
+                if(sdata[i+3] > 128) {
+                  var near = nearestColor([sdata[i], sdata[i+1], sdata[i+2]], centroids);
+                  var hex = '#' + near.map(function(n){ return ('0'+n.toString(16)).slice(-2); }).join('').toUpperCase();
+                  motifRows[r][c + pad] = hex;
+                }
+              }
+            }
+          }
+        }
+
+        var textRows = getTextGrid(state.text, objCols, state.textSize, state.textColor);
+        var paddedText = textRows.map(function(arr) {
+          var row = new Array(totalCols).fill(null);
+          for(var c=0; c<arr.length; c++) row[c + pad] = arr[c];
+          return row;
+        });
+
+        var grid = [];
+        for(var p=0; p<pad; p++) grid.push(new Array(totalCols).fill(null));
+
+        if(state.textPos === 'top') {
+          paddedText.forEach(function(r){ grid.push(r); });
+          if(motifRows.length && paddedText.length) for(var g=0; g<3; g++) grid.push(new Array(totalCols).fill(null));
+          motifRows.forEach(function(r){ grid.push(r); });
+        } else if(state.textPos === 'middle' && motifRows.length && paddedText.length) {
+          var mid = Math.floor(motifRows.length / 2);
+          var topM = motifRows.slice(0, mid);
+          var botM = motifRows.slice(mid);
+          topM.forEach(function(r){ grid.push(r); });
+          for(var g1=0; g1<2; g1++) grid.push(new Array(totalCols).fill(null));
+          paddedText.forEach(function(r){ grid.push(r); });
+          for(var g2=0; g2<2; g2++) grid.push(new Array(totalCols).fill(null));
+          botM.forEach(function(r){ grid.push(r); });
+        } else {
+          motifRows.forEach(function(r){ grid.push(r); });
+          if(motifRows.length && paddedText.length) for(var g=0; g<3; g++) grid.push(new Array(totalCols).fill(null));
+          paddedText.forEach(function(r){ grid.push(r); });
+        }
+
+        if(grid.length === pad) for(var e=0; e<15; e++) grid.push(new Array(totalCols).fill(null));
+        for(var p2=0; p2<pad; p2++) grid.push(new Array(totalCols).fill(null));
+
+        state.grid = grid;
+        state.undoStack = [];
+        updateUndoButton();
+        rebuildPaletteFromGrid();
+        render();
+      }
+
+      function getFlatPalette(pixels, k) {
+        if(pixels.length === 0) return [[38,38,38]];
+        if(pixels.length <= k) return pixels;
+        var centroids = [];
+        var step = Math.floor(pixels.length / k);
+        for(var i=0; i<k; i++) centroids.push(pixels[i * step].slice());
+
+        for(var it=0; it<7; it++) {
+          var clusters = [];
+          for(var i=0; i<k; i++) clusters.push([]);
+          for(var j=0; j<pixels.length; j++) {
+            var p = pixels[j], minD = Infinity, best = 0;
+            for(var i=0; i<k; i++) {
+              var dr = p[0]-centroids[i][0], dg = p[1]-centroids[i][1], db = p[2]-centroids[i][2];
+              var d = dr*dr + dg*dg + db*db;
+              if(d < minD) { minD = d; best = i; }
+            }
+            clusters[best].push(p);
+          }
+          for(var i=0; i<k; i++) {
+            if(clusters[i].length > 0) {
+              var r=0, g=0, b=0;
+              for(var j=0; j<clusters[i].length; j++) { r+=clusters[i][j][0]; g+=clusters[i][j][1]; b+=clusters[i][j][2]; }
+              centroids[i] = [Math.round(r/clusters[i].length), Math.round(g/clusters[i].length), Math.round(b/clusters[i].length)];
+            }
+          }
+        }
+        return centroids;
+      }
+
+      function nearestColor(rgb, centroids) {
+        var minD = Infinity, best = centroids[0];
+        for(var i=0; i<centroids.length; i++) {
+          var c = centroids[i];
+          var dr = rgb[0]-c[0], dg = rgb[1]-c[1], db = rgb[2]-c[2];
+          var d = dr*dr + dg*dg + db*db;
+          if(d < minD) { minD = d; best = c; }
+        }
+        return best;
+      }
+
+      /* ========================================================================
+         9. RENDER KANVAS, WATERMARK & GARIS STRIMIN
+         ======================================================================== */
+      function drawRoundedRect(targetCtx, x, y, w, h, r) {
+        var radius = Math.min(r, w / 2, h / 2);
+        targetCtx.beginPath();
+        targetCtx.moveTo(x + radius, y);
+        targetCtx.arcTo(x + w, y, x + w, y + h, radius);
+        targetCtx.arcTo(x + w, y + h, x, y + h, radius);
+        targetCtx.arcTo(x, y + h, x, y, radius);
+        targetCtx.arcTo(x, y, x + w, y, radius);
+        targetCtx.closePath();
+      }
+
+      function drawPatternWithWatermark(targetCanvas, targetCtx, cellSize, isTransparentExport) {
+        var rows = state.grid.length;
+        if(rows === 0) return;
+        var cols = state.grid[0].length;
+        var gridW = cols * cellSize;
+        var gridH = rows * cellSize;
+        var footerH = isTransparentExport ? 84 : 62;
+
+        targetCanvas.width = gridW;
+        targetCanvas.height = gridH + footerH;
+
+        if (isTransparentExport) {
+          targetCtx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
+        } else {
+          targetCtx.fillStyle = '#ffffff';
+          targetCtx.fillRect(0, 0, targetCanvas.width, targetCanvas.height);
+        }
+
+        // Render Kotak Piksel Warna Benang
+        for(var r=0; r<rows; r++) {
+          for(var c=0; c<cols; c++) {
+            var col = state.grid[r][c];
+            if(col) {
+              targetCtx.fillStyle = col;
+              targetCtx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
+            }
+          }
+        }
+
+        // Render Garis Strimin 1 Kotak Murni di Atas Piksel Terisi Saja
+        if(state.showGrid || isTransparentExport) {
+          targetCtx.strokeStyle = isTransparentExport ? 'rgba(255, 255, 255, 0.45)' : 'rgba(148, 163, 184, 0.5)';
+          targetCtx.lineWidth = 0.8;
+          targetCtx.beginPath();
+
+          for(var r=0; r<rows; r++) {
+            for(var c=0; c<cols; c++) {
+              if(state.grid[r][c]) {
+                targetCtx.rect(c * cellSize + 0.5, r * cellSize + 0.5, cellSize - 1, cellSize - 1);
+              }
+            }
+          }
+          targetCtx.stroke();
+        }
+
+        // Render Area Footer & Watermark Besar + Jelas pada Latar Transparan
+        if (isTransparentExport) {
+          var badgeW = Math.min(gridW - 16, Math.max(360, gridW * 0.65));
+          var badgeH = 64;
+          var badgeX = (gridW - badgeW) / 2;
+          var badgeY = gridH + 10;
+
+          targetCtx.save();
+          drawRoundedRect(targetCtx, badgeX, badgeY, badgeW, badgeH, 12);
+          targetCtx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+          targetCtx.fill();
+          targetCtx.lineWidth = 2;
+          targetCtx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+          targetCtx.stroke();
+
+          var mainFontSize = Math.max(16, Math.min(24, Math.round(gridW / 48)));
+          var subFontSize = Math.max(12, Math.min(16, Math.round(mainFontSize * 0.68)));
+
+          targetCtx.fillStyle = '#ffffff';
+          targetCtx.font = '800 ' + mainFontSize + 'px system-ui, -apple-system, sans-serif';
+          targetCtx.textAlign = 'center';
+          targetCtx.textBaseline = 'middle';
+          targetCtx.fillText('Karawo Generator • rcraft.id', gridW / 2, badgeY + badgeH * 0.36);
+
+          targetCtx.fillStyle = '#e2e8f0';
+          targetCtx.font = '700 ' + subFontSize + 'px system-ui, -apple-system, sans-serif';
+          targetCtx.fillText('Grid: ' + cols + ' × ' + rows + ' kotak', gridW / 2, badgeY + badgeH * 0.72);
+          targetCtx.restore();
+        } else {
+          targetCtx.fillStyle = '#f8fafc';
+          targetCtx.fillRect(0, gridH, gridW, footerH);
+
+          targetCtx.strokeStyle = '#94a3b8';
+          targetCtx.lineWidth = 1.2;
+          targetCtx.beginPath();
+          targetCtx.moveTo(0, gridH + 0.5);
+          targetCtx.lineTo(gridW, gridH + 0.5);
+          targetCtx.stroke();
+
+          targetCtx.fillStyle = '#0f172a';
+          targetCtx.font = '800 16px system-ui, -apple-system, sans-serif';
+          targetCtx.textAlign = 'center';
+          targetCtx.textBaseline = 'alphabetic';
+          targetCtx.fillText('Karawo Generator • rcraft.id', gridW / 2, gridH + 26);
+
+          targetCtx.fillStyle = '#475569';
+          targetCtx.font = '600 12px system-ui, -apple-system, sans-serif';
+          targetCtx.fillText('Grid: ' + cols + ' × ' + rows + ' kotak', gridW / 2, gridH + 48);
+        }
+      }
+
+      function render() {
+        var rows = state.grid.length;
+        if(rows === 0) return;
+        var cols = state.grid[0].length;
+        var size = Math.max(7, Math.min(16, Math.floor(750 / cols)));
+        state.lastCellSize = size;
+        drawPatternWithWatermark(canvas, ctx, size, false);
+      }
+
+      /* ========================================================================
+         10. KARTU PALET WARNA INTERAKTIF
+         ======================================================================== */
+      function renderPalette() {
+        var grid = el('palette-grid');
+        grid.innerHTML = '';
+        state.palette.forEach(function(item) {
+          var card = document.createElement('div');
+          card.className = 'swatch-card';
+          card.title = 'Klik untuk ubah warna ' + item.hex;
+          card.innerHTML =
+            '<span class="swatch-box" style="background:' + item.hex + '"></span>' +
+            '<div class="swatch-info">' +
+              '<p style="font-size:11px;font-weight:700;color:#0f172a;">' + item.hex + '</p>' +
+              '<p style="font-size:10px;color:#475569;">' + item.count + ' titik • Ubah</p>' +
+            '</div>' +
+            '<input type="color" value="' + item.hex + '">';
+
+          var picker = card.querySelector('input[type="color"]');
+          var currentHex = item.hex;
+
+          picker.oninput = function(e) {
+            var newHex = e.target.value.toUpperCase();
+            if (newHex === currentHex) return;
+
+            for (var r = 0; r < state.grid.length; r++) {
+              for (var c = 0; c < state.grid[r].length; c++) {
+                if (state.grid[r][c] === currentHex) {
+                  state.grid[r][c] = newHex;
+                }
+              }
+            }
+            currentHex = newHex;
+            card.querySelector('.swatch-box').style.background = newHex;
+            card.querySelector('.swatch-info p').textContent = newHex;
+            render();
+          };
+
+          picker.onchange = function() {
+            rebuildPaletteFromGrid();
+            render();
+          };
+
+          grid.appendChild(card);
+        });
+      }
+
+      /* ========================================================================
+         11. EKSPOR BERKAS (SVG & PNG)
+         ======================================================================== */
+      function escapeXml(str) {
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+
+      el('btn-svg').onclick = function() {
+        if(state.grid.length === 0) return;
+        var rows = state.grid.length, cols = state.grid[0].length, sz = 14;
+        var gridW = cols * sz, gridH = rows * sz, footerH = 84;
+        var badgeW = Math.min(gridW - 16, Math.max(360, gridW * 0.65));
+        var badgeH = 64;
+        var badgeX = (gridW - badgeW) / 2;
+        var badgeY = gridH + 10;
+
+        var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + gridW + ' ' + (gridH + footerH) + '" width="' + gridW + '" height="' + (gridH + footerH) + '">';
+        for(var r=0; r<rows; r++) {
+          for(var c=0; c<cols; c++) {
+            if(state.grid[r][c]) {
+              svg += '<rect x="' + (c * sz) + '" y="' + (r * sz) + '" width="' + sz + '" height="' + sz + '" fill="' + state.grid[r][c] + '" stroke="#ffffff" stroke-opacity="0.45" stroke-width="0.8"/>';
+            }
+          }
+        }
+
+        svg += '<rect x="' + badgeX + '" y="' + badgeY + '" width="' + badgeW + '" height="' + badgeH + '" rx="12" fill="#0f172a" fill-opacity="0.88" stroke="#ffffff" stroke-opacity="0.85" stroke-width="2"/>';
+        svg += '<text x="' + (gridW / 2) + '" y="' + (badgeY + 24) + '" font-family="sans-serif" font-size="18" font-weight="800" fill="#ffffff" text-anchor="middle">' + escapeXml('Karawo Generator • rcraft.id') + '</text>';
+        svg += '<text x="' + (gridW / 2) + '" y="' + (badgeY + 46) + '" font-family="sans-serif" font-size="13" font-weight="700" fill="#e2e8f0" text-anchor="middle">' + escapeXml('Grid: ' + cols + ' × ' + rows + ' kotak') + '</text>';
+        svg += '</svg>';
+
+        var blob = new Blob([svg], {type: 'image/svg+xml'});
+        var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+        a.download = 'pola-karawo-' + cols + 'x' + rows + '.svg'; a.click();
+      };
+
+      el('btn-png').onclick = function() {
+        if(state.grid.length === 0) return;
+        var exportCanvas = document.createElement('canvas');
+        var exportCtx = exportCanvas.getContext('2d');
+        drawPatternWithWatermark(exportCanvas, exportCtx, 16, true);
+
+        var a = document.createElement('a');
+        a.href = exportCanvas.toDataURL('image/png');
+        a.download = 'pola-strimin-karawo-transparan-' + state.grid[0].length + 'x' + state.grid.length + '.png';
+        a.click();
+      };
+
+      // Inisialisasi awal aplikasi (mode edit nonaktif secara default)
+      setBrushColor(state.brushColor);
+      syncEditModeUI();
+      makeRandomFlowerMotif();
+    })();
+  </script>
+</body>
+</html>
