@@ -41,6 +41,13 @@
       border: none; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;
     }
     .auth-btn:hover { background: #334155; }
+    .auth-request-link {
+      display: inline-block; margin-top: 12px;
+      font-size: 12px; font-style: italic; color: #475569;
+      text-decoration: underline; cursor: pointer;
+      background: none; border: none; padding: 2px 4px;
+    }
+    .auth-request-link:hover { color: #0f172a; }
     .auth-error { color: #dc2626; font-size: 11px; margin-top: 8px; font-weight: 600; min-height: 16px; }
 
     /* Kartu Panel Kontrol */
@@ -85,8 +92,38 @@
     .preset-dot.selected { border-color: #0f172a; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #0f172a; }
     .custom-color-label { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 12px; cursor: pointer; background: #f8fafc; }
 
+    /* Panel Tombol Edit Warna Terpusat di Bagian Bawah */
+    .bottom-edit-bar {
+      background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
+      padding: 12px 14px; display: flex; flex-wrap: wrap; align-items: center;
+      justify-content: center; gap: 10px; font-size: 11px;
+    }
+    .bottom-edit-group { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
+    .btn-edit-toggle {
+      padding: 8px 18px; border-radius: 7px; border: 1px solid #0f172a;
+      background: #0f172a; color: #fff; font-size: 11px; font-weight: 700; cursor: pointer;
+    }
+    .btn-edit-toggle.editing {
+      background: #166534; border-color: #166534; color: #fff;
+    }
+    .tool-chip {
+      padding: 7px 10px; border-radius: 6px; border: 1px solid #cbd5e1;
+      background: #f8fafc; color: #334155; font-size: 11px; font-weight: 600; cursor: pointer;
+    }
+    .tool-chip:hover:not(:disabled) { border-color: #0f172a; background: #e2e8f0; }
+    .tool-chip.active { background: #0f172a; color: #fff; border-color: #0f172a; }
+    .tool-chip:disabled { opacity: 0.45; cursor: not-allowed; }
+    .brush-picker-box {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 8px; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc;
+      font-weight: 600; color: #0f172a;
+    }
+    .brush-picker-box input[type="color"] {
+      width: 22px; height: 22px; border: none; padding: 0; background: none; cursor: pointer;
+    }
+
     /* Area Workspace & Kanvas Pratinjau */
-    .workspace { display: flex; flex-direction: column; gap: 12px; }
+    .workspace { display: flex; flex-direction: column; gap: 10px; }
     .info-bar { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; flex-wrap: wrap; gap: 6px; }
     
     .actions-bar { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -95,7 +132,8 @@
     .btn-secondary { background: #f8fafc; color: #334155; border-color: #cbd5e1; }
 
     .canvas-container { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; display: flex; align-items: center; justify-content: center; overflow: auto; min-height: 400px; -webkit-overflow-scrolling: touch; position: relative; }
-    canvas { max-width: 100%; height: auto; border: 1px solid #94a3b8; image-rendering: pixelated; image-rendering: crisp-edges; cursor: crosshair; }
+    canvas { max-width: 100%; height: auto; border: 1px solid #94a3b8; image-rendering: pixelated; image-rendering: crisp-edges; cursor: grab; touch-action: pan-y pinch-zoom; }
+    canvas.edit-active { cursor: crosshair; touch-action: none; }
 
     .palette-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
     .swatch-card { position: relative; display: flex; align-items: center; gap: 8px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc; cursor: pointer; transition: 0.15s; overflow: hidden; }
@@ -115,6 +153,9 @@
       <p>Masukkan kode akses khusus perangkat ini untuk masuk.</p>
       <input type="text" id="auth-code-input" class="auth-input" placeholder="KODE AKSES">
       <button type="button" id="auth-submit-btn" class="auth-btn">Masuk Aplikasi</button>
+      <div>
+        <a id="auth-request-link" class="auth-request-link" href="#" target="_blank" rel="noopener noreferrer">minta kode akses</a>
+      </div>
       <div id="auth-error-msg" class="auth-error"></div>
     </div>
   </div>
@@ -244,9 +285,29 @@
           <button type="button" id="btn-png" class="action-btn btn-primary" title="Unduh PNG Transparan + Grid Strimin Khusus Motif">Unduh PNG (Transparan)</button>
         </div>
       </div>
+
       <div class="canvas-container">
         <canvas id="canvas"></canvas>
       </div>
+
+      <!-- PANEL EDIT WARNA DI TENGAH BAWAH (TIDAK AKTIF OTOMATIS) -->
+      <div class="bottom-edit-bar">
+        <div class="bottom-edit-group">
+          <button type="button" id="btn-toggle-edit" class="btn-edit-toggle">Edit Warna</button>
+          <div id="edit-controls-panel" class="bottom-edit-group hidden">
+            <label class="brush-picker-box" title="Pilih warna untuk mengubah piksel gambar">
+              <span>Warna</span>
+              <input type="color" id="pixel-brush-color" value="#166534">
+              <strong id="pixel-brush-hex">#166534</strong>
+            </label>
+            <button type="button" id="tool-paint" class="tool-chip active">Ubah Warna</button>
+            <button type="button" id="tool-eyedrop" class="tool-chip">Sedot</button>
+            <button type="button" id="tool-erase" class="tool-chip">Hapus</button>
+            <button type="button" id="btn-undo" class="tool-chip" disabled title="Batalkan perubahan piksel terakhir">↩ Undo (0)</button>
+          </div>
+        </div>
+      </div>
+
       <div class="card hidden" id="palette-card">
         <h2>Rincian Warna Benang (Klik kotak untuk ubah warna)</h2>
         <div class="palette-grid" id="palette-grid"></div>
@@ -258,12 +319,17 @@
   <script>
     (function() {
       /* ========================================================================
-         PENGATURAN IZIN AKSES PERANGKAT
+         PENGATURAN IZIN AKSES PERANGKAT & LINK SOSIAL MEDIA
          ======================================================================== */
       var ACCESS_CONFIG = {
         wajibAkses: true,
+
+        // Ganti URL di bawah ini dengan link WhatsApp, Instagram, atau sosial media Anda
+        linkSosmed: 'https://wa.me/6282199421893?text=Halo%20Admin,%20saya%20ingin%20minta%20kode%20akses%20Karawo%20Strimin%20Generator',
+
+        // Anda bebas menambah, mengubah, atau menghapus kode akses manual di bawah ini
         daftarKode: [
-          'RCRAFT-ID',
+          'HP-DEVICE-01',
           'LAPTOP-02',
           'TABLET-03',
           'VIP-USER-99'
@@ -276,7 +342,13 @@
       var authOverlay = document.getElementById('auth-overlay');
       var authInput = document.getElementById('auth-code-input');
       var authBtn = document.getElementById('auth-submit-btn');
+      var authRequestLink = document.getElementById('auth-request-link');
       var authError = document.getElementById('auth-error-msg');
+
+      // Pasang link sosial media dari konfigurasi ke tombol "minta kode akses"
+      if (authRequestLink) {
+        authRequestLink.href = ACCESS_CONFIG.linkSosmed || '#';
+      }
 
       function cekIzinAkses() {
         if (!ACCESS_CONFIG.wajibAkses) {
@@ -370,7 +442,13 @@
         counter: 0,
         grid: [],
         palette: [],
-        lastCellSize: 14
+        lastCellSize: 14,
+        editModeEnabled: false,
+        brushColor: '#166534',
+        pixelTool: 'paint', // 'paint' | 'eyedrop' | 'erase'
+        isPointerDrawing: false,
+        strokeSnapshotTaken: false,
+        undoStack: []
       };
 
       var canvas = document.getElementById('canvas');
@@ -379,8 +457,85 @@
       function el(id) { return document.getElementById(id); }
 
       /* ========================================================================
-         2. EVENT LISTENER INTERAKSI KONTROL
+         2. UNDO STACK, KONTROL EDIT WARNA BAWAH & EVENT LISTENER
          ======================================================================== */
+      function cloneGrid(g) {
+        return g.map(function(row) { return row.slice(); });
+      }
+
+      function updateUndoButton() {
+        var btn = el('btn-undo');
+        var count = state.undoStack.length;
+        btn.disabled = count === 0;
+        btn.textContent = '↩ Undo (' + count + ')';
+      }
+
+      function pushUndoSnapshot() {
+        if (state.grid.length === 0) return;
+        state.undoStack.push(cloneGrid(state.grid));
+        if (state.undoStack.length > 30) {
+          state.undoStack.shift();
+        }
+        updateUndoButton();
+      }
+
+      function performUndo() {
+        if (state.undoStack.length === 0) return;
+        state.grid = state.undoStack.pop();
+        updateUndoButton();
+        rebuildPaletteFromGrid();
+        render();
+      }
+
+      function syncEditModeUI() {
+        var toggleBtn = el('btn-toggle-edit');
+        var panel = el('edit-controls-panel');
+
+        if (!state.editModeEnabled) {
+          state.isPointerDrawing = false;
+          state.strokeSnapshotTaken = false;
+          toggleBtn.className = 'btn-edit-toggle';
+          toggleBtn.textContent = 'Edit Warna';
+          panel.classList.add('hidden');
+          canvas.classList.remove('edit-active');
+          return;
+        }
+
+        toggleBtn.className = 'btn-edit-toggle editing';
+        toggleBtn.textContent = 'Selesai Edit';
+        panel.classList.remove('hidden');
+        canvas.classList.add('edit-active');
+      }
+
+      function setBrushColor(hex) {
+        var normalized = (hex || '#166534').toUpperCase();
+        state.brushColor = normalized;
+        el('pixel-brush-color').value = normalized;
+        el('pixel-brush-hex').textContent = normalized;
+      }
+
+      function setPixelTool(toolName) {
+        state.pixelTool = toolName;
+        el('tool-paint').className = 'tool-chip' + (toolName === 'paint' ? ' active' : '');
+        el('tool-eyedrop').className = 'tool-chip' + (toolName === 'eyedrop' ? ' active' : '');
+        el('tool-erase').className = 'tool-chip' + (toolName === 'erase' ? ' active' : '');
+        syncEditModeUI();
+      }
+
+      el('btn-toggle-edit').onclick = function() {
+        state.editModeEnabled = !state.editModeEnabled;
+        syncEditModeUI();
+      };
+
+      el('pixel-brush-color').oninput = function(e) {
+        setBrushColor(e.target.value);
+      };
+
+      el('tool-paint').onclick = function() { setPixelTool('paint'); };
+      el('tool-eyedrop').onclick = function() { setPixelTool('eyedrop'); };
+      el('tool-erase').onclick = function() { setPixelTool('erase'); };
+      el('btn-undo').onclick = performUndo;
+
       el('btn-random').onclick = makeRandomFlowerMotif;
 
       el('input-cartoon').onchange = function(e) {
@@ -461,38 +616,96 @@
       el('input-ink').onchange = function(e) { setInk(e.target.value); };
 
       /* ========================================================================
-         3. FITUR KLIK PIKSEL MANUAL PADA KANVAS UTAMA
+         3. EDIT WARNA PER PIKSEL PADA KANVAS (HANYA SAAT MODE EDIT AKTIF & PIKSEL TERISI)
          ======================================================================== */
-      canvas.addEventListener('click', function(e) {
+      function getGridCoordsFromPointer(clientX, clientY) {
         var rows = state.grid.length;
-        if (rows === 0) return;
+        if (rows === 0) return null;
         var cols = state.grid[0].length;
-        
         var rect = canvas.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) return null;
+
+        var gridCanvasHeight = rows * state.lastCellSize;
         var scaleX = canvas.width / rect.width;
-        var scaleY = (rows * state.lastCellSize) / rect.height;
-        
-        var clickX = (e.clientX - rect.left) * scaleX;
-        var clickY = (e.clientY - rect.top) * scaleY;
-        
-        var cIdx = Math.floor(clickX / state.lastCellSize);
-        var rIdx = Math.floor(clickY / state.lastCellSize);
-        
-        if (rIdx >= 0 && rIdx < rows && cIdx >= 0 && cIdx < cols) {
-          var currentColor = state.grid[rIdx][cIdx] || '#FFFFFF';
-          var colorPicker = document.createElement('input');
-          colorPicker.type = 'color';
-          colorPicker.value = currentColor === '#FFFFFF' ? '#262626' : currentColor;
-          
-          colorPicker.onchange = function(ev) {
-            var newColor = ev.target.value.toUpperCase();
-            state.grid[rIdx][cIdx] = newColor;
-            rebuildPaletteFromGrid();
-            render();
-          };
-          colorPicker.click();
+        var scaleY = canvas.height / rect.height;
+
+        var xPx = (clientX - rect.left) * scaleX;
+        var yPx = (clientY - rect.top) * scaleY;
+
+        if (xPx < 0 || yPx < 0 || xPx >= cols * state.lastCellSize || yPx >= gridCanvasHeight) {
+          return null;
         }
+
+        return {
+          r: Math.floor(yPx / state.lastCellSize),
+          c: Math.floor(xPx / state.lastCellSize)
+        };
+      }
+
+      function applyPixelActionAt(clientX, clientY) {
+        if (!state.editModeEnabled) return;
+        var pos = getGridCoordsFromPointer(clientX, clientY);
+        if (!pos) return;
+
+        var currentVal = state.grid[pos.r][pos.c];
+
+        // Kuas hanya berfungsi pada piksel gambar yang sudah terisi
+        if (!currentVal) {
+          return;
+        }
+
+        if (state.pixelTool === 'eyedrop') {
+          setBrushColor(currentVal);
+          setPixelTool('paint');
+          return;
+        }
+
+        if (state.pixelTool === 'erase') {
+          if (!state.strokeSnapshotTaken) {
+            pushUndoSnapshot();
+            state.strokeSnapshotTaken = true;
+          }
+          state.grid[pos.r][pos.c] = null;
+          rebuildPaletteFromGrid();
+          render();
+          return;
+        }
+
+        if (currentVal.toUpperCase() !== state.brushColor) {
+          if (!state.strokeSnapshotTaken) {
+            pushUndoSnapshot();
+            state.strokeSnapshotTaken = true;
+          }
+          state.grid[pos.r][pos.c] = state.brushColor;
+          rebuildPaletteFromGrid();
+          render();
+        }
+      }
+
+      canvas.addEventListener('pointerdown', function(e) {
+        if (!state.editModeEnabled) return;
+        state.isPointerDrawing = true;
+        state.strokeSnapshotTaken = false;
+        try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+        applyPixelActionAt(e.clientX, e.clientY);
       });
+
+      canvas.addEventListener('pointermove', function(e) {
+        if (!state.editModeEnabled || !state.isPointerDrawing || state.pixelTool === 'eyedrop') return;
+        applyPixelActionAt(e.clientX, e.clientY);
+      });
+
+      function stopDrawing(e) {
+        if (!state.isPointerDrawing) return;
+        state.isPointerDrawing = false;
+        state.strokeSnapshotTaken = false;
+        if (e && e.pointerId !== undefined) {
+          try { canvas.releasePointerCapture(e.pointerId); } catch (err) {}
+        }
+      }
+
+      canvas.addEventListener('pointerup', stopDrawing);
+      canvas.addEventListener('pointercancel', stopDrawing);
 
       /* ========================================================================
          4. PENGELOLAAN UNGGAH BERKAS (DRAG & DROP)
@@ -976,6 +1189,8 @@
         for(var p2=0; p2<pad; p2++) grid.push(new Array(totalCols).fill(null));
 
         state.grid = grid;
+        state.undoStack = [];
+        updateUndoButton();
         rebuildPaletteFromGrid();
         render();
       }
@@ -1024,13 +1239,24 @@
       /* ========================================================================
          9. RENDER KANVAS, WATERMARK & GARIS STRIMIN
          ======================================================================== */
+      function drawRoundedRect(targetCtx, x, y, w, h, r) {
+        var radius = Math.min(r, w / 2, h / 2);
+        targetCtx.beginPath();
+        targetCtx.moveTo(x + radius, y);
+        targetCtx.arcTo(x + w, y, x + w, y + h, radius);
+        targetCtx.arcTo(x + w, y + h, x, y + h, radius);
+        targetCtx.arcTo(x, y + h, x, y, radius);
+        targetCtx.arcTo(x, y, x + w, y, radius);
+        targetCtx.closePath();
+      }
+
       function drawPatternWithWatermark(targetCanvas, targetCtx, cellSize, isTransparentExport) {
         var rows = state.grid.length;
         if(rows === 0) return;
         var cols = state.grid[0].length;
         var gridW = cols * cellSize;
         var gridH = rows * cellSize;
-        var footerH = isTransparentExport ? 60 : 50;
+        var footerH = isTransparentExport ? 84 : 62;
 
         targetCanvas.width = gridW;
         targetCanvas.height = gridH + footerH;
@@ -1069,27 +1295,55 @@
           targetCtx.stroke();
         }
 
-        // Render Area Footer & Watermark Proporsional
-        if (!isTransparentExport) {
+        // Render Area Footer & Watermark Besar + Jelas pada Latar Transparan
+        if (isTransparentExport) {
+          var badgeW = Math.min(gridW - 16, Math.max(360, gridW * 0.65));
+          var badgeH = 64;
+          var badgeX = (gridW - badgeW) / 2;
+          var badgeY = gridH + 10;
+
+          targetCtx.save();
+          drawRoundedRect(targetCtx, badgeX, badgeY, badgeW, badgeH, 12);
+          targetCtx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+          targetCtx.fill();
+          targetCtx.lineWidth = 2;
+          targetCtx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+          targetCtx.stroke();
+
+          var mainFontSize = Math.max(16, Math.min(24, Math.round(gridW / 48)));
+          var subFontSize = Math.max(12, Math.min(16, Math.round(mainFontSize * 0.68)));
+
+          targetCtx.fillStyle = '#ffffff';
+          targetCtx.font = '800 ' + mainFontSize + 'px system-ui, -apple-system, sans-serif';
+          targetCtx.textAlign = 'center';
+          targetCtx.textBaseline = 'middle';
+          targetCtx.fillText('Karawo Strimin Generator • rcraft.id', gridW / 2, badgeY + badgeH * 0.36);
+
+          targetCtx.fillStyle = '#e2e8f0';
+          targetCtx.font = '700 ' + subFontSize + 'px system-ui, -apple-system, sans-serif';
+          targetCtx.fillText('Grid: ' + cols + ' × ' + rows + ' kotak', gridW / 2, badgeY + badgeH * 0.72);
+          targetCtx.restore();
+        } else {
           targetCtx.fillStyle = '#f8fafc';
           targetCtx.fillRect(0, gridH, gridW, footerH);
+
+          targetCtx.strokeStyle = '#94a3b8';
+          targetCtx.lineWidth = 1.2;
+          targetCtx.beginPath();
+          targetCtx.moveTo(0, gridH + 0.5);
+          targetCtx.lineTo(gridW, gridH + 0.5);
+          targetCtx.stroke();
+
+          targetCtx.fillStyle = '#0f172a';
+          targetCtx.font = '800 16px system-ui, -apple-system, sans-serif';
+          targetCtx.textAlign = 'center';
+          targetCtx.textBaseline = 'alphabetic';
+          targetCtx.fillText('Karawo Strimin Generator • rcraft.id', gridW / 2, gridH + 26);
+
+          targetCtx.fillStyle = '#475569';
+          targetCtx.font = '600 12px system-ui, -apple-system, sans-serif';
+          targetCtx.fillText('Grid: ' + cols + ' × ' + rows + ' kotak', gridW / 2, gridH + 48);
         }
-
-        targetCtx.strokeStyle = '#94a3b8';
-        targetCtx.lineWidth = 1.2;
-        targetCtx.beginPath();
-        targetCtx.moveTo(0, gridH + 0.5);
-        targetCtx.lineTo(gridW, gridH + 0.5);
-        targetCtx.stroke();
-
-        targetCtx.fillStyle = '#1e293b';
-        targetCtx.font = 'bold 14px system-ui, -apple-system, sans-serif';
-        targetCtx.textAlign = 'center';
-        targetCtx.fillText('Karawo Strimin Generator • rcraft.id', gridW / 2, gridH + 22);
-
-        targetCtx.fillStyle = '#475569';
-        targetCtx.font = '11px system-ui, -apple-system, sans-serif';
-        targetCtx.fillText('Grid: ' + cols + ' × ' + rows + ' kotak', gridW / 2, gridH + 42);
       }
 
       function render() {
@@ -1151,10 +1405,18 @@
       /* ========================================================================
          11. EKSPOR BERKAS (SVG & PNG)
          ======================================================================== */
+      function escapeXml(str) {
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+
       el('btn-svg').onclick = function() {
         if(state.grid.length === 0) return;
         var rows = state.grid.length, cols = state.grid[0].length, sz = 14;
-        var gridW = cols * sz, gridH = rows * sz, footerH = 50;
+        var gridW = cols * sz, gridH = rows * sz, footerH = 84;
+        var badgeW = Math.min(gridW - 16, Math.max(360, gridW * 0.65));
+        var badgeH = 64;
+        var badgeX = (gridW - badgeW) / 2;
+        var badgeY = gridH + 10;
 
         var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + gridW + ' ' + (gridH + footerH) + '" width="' + gridW + '" height="' + (gridH + footerH) + '">';
         for(var r=0; r<rows; r++) {
@@ -1165,9 +1427,9 @@
           }
         }
 
-        svg += '<line x1="0" y1="' + gridH + '" x2="' + gridW + '" y2="' + gridH + '" stroke="#94a3b8" stroke-width="1.2"/>';
-        svg += '<text x="' + (gridW / 2) + '" y="' + (gridH + 22) + '" font-family="sans-serif" font-size="14" font-weight="bold" fill="#1e293b" text-anchor="middle">Karawo Strimin Generator • rcraft.id</text>';
-        svg += '<text x="' + (gridW / 2) + '" y="' + (gridH + 42) + '" font-family="sans-serif" font-size="11" fill="#475569" text-anchor="middle">Grid: ' + cols + ' × ' + rows + ' kotak</text>';
+        svg += '<rect x="' + badgeX + '" y="' + badgeY + '" width="' + badgeW + '" height="' + badgeH + '" rx="12" fill="#0f172a" fill-opacity="0.88" stroke="#ffffff" stroke-opacity="0.85" stroke-width="2"/>';
+        svg += '<text x="' + (gridW / 2) + '" y="' + (badgeY + 24) + '" font-family="sans-serif" font-size="18" font-weight="800" fill="#ffffff" text-anchor="middle">' + escapeXml('Karawo Strimin Generator • rcraft.id') + '</text>';
+        svg += '<text x="' + (gridW / 2) + '" y="' + (badgeY + 46) + '" font-family="sans-serif" font-size="13" font-weight="700" fill="#e2e8f0" text-anchor="middle">' + escapeXml('Grid: ' + cols + ' × ' + rows + ' kotak') + '</text>';
         svg += '</svg>';
 
         var blob = new Blob([svg], {type: 'image/svg+xml'});
@@ -1187,7 +1449,9 @@
         a.click();
       };
 
-      // Inisialisasi awal aplikasi
+      // Inisialisasi awal aplikasi (mode edit nonaktif secara default)
+      setBrushColor(state.brushColor);
+      syncEditModeUI();
       makeRandomFlowerMotif();
     })();
   </script>
