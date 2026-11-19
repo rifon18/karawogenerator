@@ -149,8 +149,8 @@
   <!-- LAYAR KUNCI AKSES -->
   <div id="auth-overlay" class="auth-overlay hidden">
     <div class="auth-box">
-      <h3>Akses Terbatas</h3>
-      <p>Masukkan kode akses khusus perangkat ini untuk masuk.</p>
+      <h3>Akses Terbatas!</h3>
+      <p>Masukkan kode akses untuk menggunakan aplikasi.</p>
       <input type="text" id="auth-code-input" class="auth-input" placeholder="KODE AKSES">
       <button type="button" id="auth-submit-btn" class="auth-btn">Masuk Aplikasi</button>
       <div>
@@ -165,29 +165,28 @@
     <!-- PANEL KONTROL (SIDEBAR) -->
     <aside class="sidebar">
       <div class="card">
-        <h2>1. Sumber Gambar</h2>
+        <h2>Sumber Gambar</h2>
         <div class="upload-box" id="drop-zone">
           <p>Ketuk atau Seret Gambar ke Sini</p>
-          <span>Otomatis Jadi Kartun 2D & Piksel</span>
           <input type="file" id="file-input" accept="image/*">
         </div>
         <div class="checkbox-row" style="margin-top:8px; padding-top:6px;">
-          <span>Efek Kartun 2D (Garis Tegas)</span>
+          <span>2D</span>
           <input type="checkbox" id="input-cartoon" checked>
         </div>
-        <button type="button" class="btn-random" id="btn-random">🌸 Acak Aneka Motif Bunga</button>
+        <button type="button" class="btn-random" id="btn-random">Sampel Motif</button>
         <div style="font-size:10px; color:#64748b; text-align:center; margin-top:6px;" id="motif-label">Status: Siap</div>
       </div>
 
       <div class="card">
-        <h2>2. Tambah Teks & Posisi</h2>
+        <h2>Tambah Teks & Posisi</h2>
         <input type="text" id="text-input" class="text-input" placeholder="Ketik teks / nama..." maxlength="30">
         
         <div class="label-row"><span>Posisi Teks</span></div>
         <select id="text-pos" class="select-input">
-          <option value="bottom">Di Bawah Motif</option>
-          <option value="top">Di Atas Motif</option>
-          <option value="middle">Di Tengah (Belah Motif)</option>
+          <option value="bottom">Bawah</option>
+          <option value="top">Atas</option>
+          <option value="middle">Tengah</option>
         </select>
 
         <div class="text-options">
@@ -207,10 +206,10 @@
       </div>
 
       <div class="card">
-        <h2>3. Mode & Deteksi</h2>
+        <h2>Mode & Deteksi</h2>
         <div class="mode-grid">
-          <button type="button" id="mode-mono" class="mode-btn active">1 Warna</button>
-          <button type="button" id="mode-color" class="mode-btn">Multi Warna</button>
+          <button type="button" id="mode-mono" class="mode-btn active">Hitam Putih</button>
+          <button type="button" id="mode-color" class="mode-btn">Warna</button>
         </div>
 
         <div id="mono-box">
@@ -226,7 +225,7 @@
 
         <div id="color-box" class="hidden">
           <div class="control-group">
-            <div class="label-row"><span>Toleransi Hapus BG</span><strong id="val-tol">40</strong></div>
+            <div class="label-row"><span>Toleransi Hapus Background</span><strong id="val-tol">40</strong></div>
             <input type="range" id="input-tol" min="5" max="150" value="40">
           </div>
           <div class="control-group">
@@ -237,14 +236,14 @@
       </div>
 
       <div class="card">
-        <h2>4. Grid, Kepadatan & Benang</h2>
+        <h2>Grid, Kepadatan & Benang</h2>
         <div class="control-group">
-          <div class="label-row"><span>Kepadatan Piksel (Resolusi Detail)</span><strong id="val-density">Sedang (120 px)</strong></div>
+          <div class="label-row"><span>Kepadatan Piksel (Resolusi)</span><strong id="val-density">Default</strong></div>
           <input type="range" id="input-density" min="40" max="240" step="20" value="120">
         </div>
 
         <div class="control-group">
-          <div class="label-row"><span>Kolom Lebar Strimin</span><strong id="val-cols">100 kolom</strong></div>
+          <div class="label-row"><span>Lebar Kolom</span><strong id="val-cols">100 kolom</strong></div>
           <input type="range" id="input-cols" min="30" max="150" value="100">
         </div>
 
@@ -270,7 +269,7 @@
         </div>
 
         <div class="checkbox-row">
-          <span>Garis Strimin (Hanya Piksel Gambar)</span>
+          <span>Garis Pixel</span>
           <input type="checkbox" id="input-grid" checked>
         </div>
       </div>
@@ -279,7 +278,7 @@
     <!-- AREA PRATINJAU KANVAS & WORKSPACE -->
     <section class="workspace">
       <div class="info-bar">
-        <div>Strimin: <strong id="info-dim">0 × 0</strong> | Titik: <strong id="info-pts">0</strong></div>
+        <div>Pixel: <strong id="info-dim">0 × 0</strong> | Titik: <strong id="info-pts">0</strong></div>
         <div class="actions-bar">
           <button type="button" id="btn-svg" class="action-btn btn-secondary">Unduh SVG</button>
           <button type="button" id="btn-png" class="action-btn btn-primary" title="Unduh PNG Transparan + Grid Strimin Khusus Motif">Unduh PNG (Transparan)</button>
@@ -297,8 +296,8 @@
           <div id="edit-controls-panel" class="bottom-edit-group hidden">
             <label class="brush-picker-box" title="Pilih warna untuk mengubah piksel gambar">
               <span>Warna</span>
-              <input type="color" id="pixel-brush-color" value="#166534">
-              <strong id="pixel-brush-hex">#166534</strong>
+              <input type="color" id="pixel-brush-color" value="#ffffff">
+              <strong id="pixel-brush-hex">#ffffff</strong>
             </label>
             <button type="button" id="tool-paint" class="tool-chip active">Ubah Warna</button>
             <button type="button" id="tool-eyedrop" class="tool-chip">Sedot</button>
@@ -329,9 +328,9 @@
 
         // Anda bebas menambah, mengubah, atau menghapus kode akses manual di bawah ini
         daftarKode: [
-          'HP-DEVICE-01',
-          'LAPTOP-02',
-          'TABLET-03',
+          'RCRAFT-ID',
+          'CHAKS-STORE',
+          'DEVICE03',
           'VIP-USER-99'
         ]
       };
@@ -444,7 +443,7 @@
         palette: [],
         lastCellSize: 14,
         editModeEnabled: false,
-        brushColor: '#166534',
+        brushColor: '#ffffff',
         pixelTool: 'paint', // 'paint' | 'eyedrop' | 'erase'
         isPointerDrawing: false,
         strokeSnapshotTaken: false,
@@ -508,7 +507,7 @@
       }
 
       function setBrushColor(hex) {
-        var normalized = (hex || '#166534').toUpperCase();
+        var normalized = (hex || '#ffffff').toUpperCase();
         state.brushColor = normalized;
         el('pixel-brush-color').value = normalized;
         el('pixel-brush-hex').textContent = normalized;
@@ -1317,7 +1316,7 @@
           targetCtx.font = '800 ' + mainFontSize + 'px system-ui, -apple-system, sans-serif';
           targetCtx.textAlign = 'center';
           targetCtx.textBaseline = 'middle';
-          targetCtx.fillText('Karawo Strimin Generator • rcraft.id', gridW / 2, badgeY + badgeH * 0.36);
+          targetCtx.fillText('Karawo Generator • rcraft.id', gridW / 2, badgeY + badgeH * 0.36);
 
           targetCtx.fillStyle = '#e2e8f0';
           targetCtx.font = '700 ' + subFontSize + 'px system-ui, -apple-system, sans-serif';
@@ -1338,7 +1337,7 @@
           targetCtx.font = '800 16px system-ui, -apple-system, sans-serif';
           targetCtx.textAlign = 'center';
           targetCtx.textBaseline = 'alphabetic';
-          targetCtx.fillText('Karawo Strimin Generator • rcraft.id', gridW / 2, gridH + 26);
+          targetCtx.fillText('Karawo Generator • rcraft.id', gridW / 2, gridH + 26);
 
           targetCtx.fillStyle = '#475569';
           targetCtx.font = '600 12px system-ui, -apple-system, sans-serif';
@@ -1364,7 +1363,7 @@
         state.palette.forEach(function(item) {
           var card = document.createElement('div');
           card.className = 'swatch-card';
-          card.title = 'Klik untuk ganti warna ' + item.hex;
+          card.title = 'Klik untuk ubah warna ' + item.hex;
           card.innerHTML =
             '<span class="swatch-box" style="background:' + item.hex + '"></span>' +
             '<div class="swatch-info">' +
@@ -1428,13 +1427,13 @@
         }
 
         svg += '<rect x="' + badgeX + '" y="' + badgeY + '" width="' + badgeW + '" height="' + badgeH + '" rx="12" fill="#0f172a" fill-opacity="0.88" stroke="#ffffff" stroke-opacity="0.85" stroke-width="2"/>';
-        svg += '<text x="' + (gridW / 2) + '" y="' + (badgeY + 24) + '" font-family="sans-serif" font-size="18" font-weight="800" fill="#ffffff" text-anchor="middle">' + escapeXml('Karawo Strimin Generator • rcraft.id') + '</text>';
+        svg += '<text x="' + (gridW / 2) + '" y="' + (badgeY + 24) + '" font-family="sans-serif" font-size="18" font-weight="800" fill="#ffffff" text-anchor="middle">' + escapeXml('Karawo Generator • rcraft.id') + '</text>';
         svg += '<text x="' + (gridW / 2) + '" y="' + (badgeY + 46) + '" font-family="sans-serif" font-size="13" font-weight="700" fill="#e2e8f0" text-anchor="middle">' + escapeXml('Grid: ' + cols + ' × ' + rows + ' kotak') + '</text>';
         svg += '</svg>';
 
         var blob = new Blob([svg], {type: 'image/svg+xml'});
         var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-        a.download = 'pola-strimin-karawo-' + cols + 'x' + rows + '.svg'; a.click();
+        a.download = 'pola-karawo-' + cols + 'x' + rows + '.svg'; a.click();
       };
 
       el('btn-png').onclick = function() {
